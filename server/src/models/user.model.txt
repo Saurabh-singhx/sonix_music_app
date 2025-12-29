@@ -1,0 +1,144 @@
+
+
+CREATE TABLE users (
+
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_name VARCHAR(50) NOT NULL,
+    user_email VARCHAR(255) UNIQUE NOT NULL,
+    user_password TEXT NOT NULL,
+    user_profile_pic TEXT DEFAULT '',
+    date_of_birth DATE,
+    gender VARCHAR(20),
+    is_premium BOOLEAN DEFAULT FALSE,
+    songs_liked INTEGER DEFAULT 0,
+    playlists_liked INTEGER DEFAULT 0,
+    playlists_created INTEGER DEFAULT 0,
+    songs_contributed INTEGER DEFAULT 0,
+    friends_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP
+);
+
+
+CREATE TABLE songs (
+    song_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    song_title VARCHAR(200) NOT NULL,
+    song_url TEXT NOT NULL,
+    artist_name VARCHAR(50),
+    album_name VARCHAR(50),
+    duration INTEGER NOT NULL,
+    genre VARCHAR(30),
+    release_date DATE,
+    cover_image_url TEXT DEFAULT '',
+    tags TEXT[] DEFAULT '{}'
+);
+
+CREATE TABLE playlists (
+    playlist_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    playlist_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE playlist_songs(
+    playlist_id UUID REFERENCES playlists(playlist_id) ON DELETE CASCADE,
+    song_id UUID REFERENCES songs(song_id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (playlist_id, song_id),
+    UNIQUE (playlist_id, position)
+);
+
+CREATE TABLE liked_songs(
+    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    song_id UUID NOT NULL REFERENCES songs(song_id) ON DELETE CASCADE,
+    liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id,song_id)
+);
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  user_id             String     @id @default(uuid())
+  user_name           String     @db.VarChar(50)
+  user_email          String     @unique @db.VarChar(255)
+  user_password       String
+  user_profile_pic    String     @default("")
+  date_of_birth       DateTime?
+  gender              String?    @db.VarChar(20)
+  is_premium          Boolean    @default(false)
+  songs_liked         Int        @default(0)
+  playlists_liked     Int        @default(0)
+  playlists_created   Int        @default(0)
+  songs_contributed   Int        @default(0)
+  friends_count       Int        @default(0)
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+  last_login          DateTime?
+  playlists           Playlist[]
+  likedSongs          LikedSong[]
+}
+
+model Song {
+  song_id          String          @id @default(uuid())
+  song_title       String          @db.VarChar(200)
+  song_url         String
+  artist_name      String?         @db.VarChar(50)
+  album_name       String?         @db.VarChar(50)
+  duration         Int
+  genre            String?         @db.VarChar(30)
+  release_date     DateTime?
+  cover_image_url  String          @default("")
+  tags             String[]        @default([])
+  playlists        PlaylistSong[]
+  likedByUsers     LikedSong[]
+}
+
+model Playlist {
+  playlist_id    String          @id @default(uuid())
+  user_id        String
+  playlist_name  String          @db.VarChar(100)
+  description    String?
+  is_public      Boolean         @default(false)
+  created_at     DateTime        @default(now())
+  user           User            @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  songs          PlaylistSong[]
+}
+
+model PlaylistSong {
+  playlist_id   String
+  song_id       String
+  position      Int
+  added_at      DateTime @default(now())
+  playlist      Playlist @relation(fields: [playlist_id], references: [playlist_id], onDelete: Cascade)
+  song          Song     @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
+  @@id([playlist_id, song_id])
+  @@unique([playlist_id, position])
+}
+
+model LikedSong {
+  user_id    String
+  song_id    String
+  liked_at   DateTime @default(now())
+  user       User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  song       Song @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
+
+  @@id([user_id, song_id])
+}
+

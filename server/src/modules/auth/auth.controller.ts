@@ -1,72 +1,74 @@
 import { generateToken } from "../../lib/jwt.js";
 import bcrypt from "bcrypt";
-import prisma from "../../lib/prisma.ts";
+import prisma from "../../lib/prisma.js";
 import redisClient from "../../config/redis.js";
 import nodemailer from "nodemailer"
+import { Request, Response } from "express";
+import { LoginBody, SignupBody } from "../../types/request/auth.js";
+import { StoredOtp } from "../../types/redis/otp.js";
 
-export const signup = async (req, res) => {
+export const signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
 
     const { email, password, dob, gender, name, otp } = req.body;
 
     try {
-
         if (!email || !password || !gender || !name || !otp) {
-            return res.status(400).json({ message: "All fields are required" })
+            res.status(400).json({ message: "All fields are required" });
+            return;
         }
+
         const normEmail = email.trim().toLowerCase();
+
         const ifUserExists = await prisma.user.findUnique({
-            where: {
-                user_email: normEmail,
-            },
-        })
+            where: { user_email: normEmail },
+        });
+
         if (ifUserExists) {
-            return res.status(409).json({ message: "User already exists" })
+            res.status(409).json({ message: "User already exists" });
+            return;
         }
+
         const key = `otp:${normEmail}`;
         const storedOtp = await redisClient.get(key);
 
         if (!storedOtp) {
-            return res.status(400).json({ message: "OTP expired or invalid" });
+            res.status(400).json({ message: "OTP expired or invalid" });
+            return;
         }
 
-        const parsedOtp = JSON.parse(storedOtp);
+        const parsedOtp: StoredOtp = JSON.parse(storedOtp);
 
-        // Max attempts check
         if (parsedOtp.attempts >= 5) {
             await redisClient.del(key);
-            return res.status(429).json({ message: "too many otp attempts" });
+            res.status(429).json({ message: "Too many OTP attempts" });
+            return;
         }
 
         const isValid = await bcrypt.compare(otp, parsedOtp.otp);
-        if (!isValid) {
 
+        if (!isValid) {
             parsedOtp.attempts += 1;
 
             const ttl = await redisClient.ttl(key);
             if (ttl > 0) {
-                await redisClient.set(
-                    key,
-                    JSON.stringify(parsedOtp),
-                    { EX: ttl }
-                );
+                await redisClient.set(key, JSON.stringify(parsedOtp), { EX: ttl });
             }
 
-            return res.status(400).json({ message: "Invalid otp" })
+            res.status(400).json({ message: "Invalid OTP" });
+            return;
         }
 
         await redisClient.del(key);
 
-        const salt = await bcrypt.genSalt(10);
-
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create({
             data: {
                 user_email: normEmail,
                 user_name: name,
                 user_password: hashedPassword,
-                gender: gender,
-                date_of_birth: dob ? new Date(dob) : null
+                gender,
+                date_of_birth: dob ? new Date(dob) : null,
             },
             select: {
                 user_id: true,
@@ -75,26 +77,25 @@ export const signup = async (req, res) => {
                 user_profile_pic: true,
                 gender: true,
                 date_of_birth: true,
-                role:true
-            }
+                role: true,
+            },
         });
 
-        if (newUser) {
-            generateToken(newUser.user_id, res);
-        }
+        generateToken(newUser.user_id, res);
 
-        return res.status(201).json({
-            message: "user successfully created",
-            userData: newUser
-        })
-
+        res.status(201).json({
+            message: "User successfully created",
+            userData: newUser,
+        });
     } catch (error) {
-        console.log("error in signup controller", error.message);
-        return res.status(500).json({ message: "Internal server error" })
+        const err = error as Error;
+        console.error("error in signup controller:", err.message);
+        res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
-export const otpSend = async (req, res) => {
+
+export const otpSend = async (req: Request<{}, {}, { email: string }>, res: Response) => {
 
 
     const { email } = req.body;
@@ -154,7 +155,7 @@ export const otpSend = async (req, res) => {
                 message: "OTP already sent. Please wait before requesting again."
             });
         }
-        
+
         await redisClient.set(key, user_otp_data, { EX: 50 });
 
         await transporter.sendMail(mailOptions);
@@ -163,12 +164,13 @@ export const otpSend = async (req, res) => {
 
 
     } catch (error) {
-        console.log("error in sendOtp controller", error.message);
+        const err = error as Error;
+        console.log("error in sendOtp controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
 
-export const login = async (req, res) => {
+export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
     const { email, password } = req.body;
 
@@ -205,27 +207,29 @@ export const login = async (req, res) => {
                 user_profile_pic: user.user_profile_pic,
                 date_of_birth: user.date_of_birth,
                 gender: user.gender,
-                role:user.role
+                role: user.role
             }
         })
     } catch (error) {
-        console.log("error in login controller", error.message);
+        const err = error as Error;
+        console.log("error in login controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
 
-export const logout = async (req, res) => {
+export const logout = async (req: Request, res: Response) => {
     try {
         res.cookie("jwtAuth", "", { maxAge: 0 })
 
         return res.status(200).json({ message: "logged out successfully" })
     } catch (error) {
-        console.log("error in logout controller", error.message);
+        const err = error as Error;
+        console.log("error in logout controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
 
-export const checkAuth = async (req, res) => {
+export const checkAuth = async (req: Request, res: Response) => {
 
     const user = req.user;
     try {
@@ -234,29 +238,38 @@ export const checkAuth = async (req, res) => {
             userData: user
         })
     } catch (error) {
-        console.log("error in checkAuth controller", error.message);
+        const err = error as Error;
+        console.log("error in checkAuth controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
 
 
-export const googleAuth = async (req, res) => {
-    try {
-        const user = req.user;
-        generateToken(user.user_id, res);
+export const googleAuth = async (req: Request, res: Response) => {
 
-        const redirectUrl =
-            process.env.NODE_ENV === "development"
-                ? "http://localhost:5173"
-                : "";
+    const user= req.user;
+  try {
 
-        res.redirect(redirectUrl);
-    } catch (error) {
-        console.log("Error in Google signup", error);
-        const errorRedirect =
-            process.env.NODE_ENV === "development"
-                ? "http://localhost:5173/login?error=oauth_failed"
-                : "";
-        res.redirect(errorRedirect);
+    if (!req.user) {
+      throw new Error("No user in request");
     }
+
+    // generateToken(user.user_id, res);
+
+    const redirectUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:5173"
+        : "";
+
+    res.redirect(redirectUrl);
+  } catch (error) {
+    console.error("Error in Google signup", error);
+
+    res.redirect(
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:5173/login?error=oauth_failed"
+        : ""
+    );
+  }
 };
+

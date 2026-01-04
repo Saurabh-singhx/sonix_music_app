@@ -1,7 +1,6 @@
-import rateLimit from "express-rate-limit";
+import {rateLimit} from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import redisClient from "../config/redis.js";
-
 
 /**
  * LOGIN rate limit
@@ -42,17 +41,17 @@ export const signupLimiter = rateLimit({
 // otp rate limit  5 request / 10 minutes
 
 export const otpLimiter = rateLimit({
-  // windowMs:10 * 60 * 1000,
-  // max:5,
-  // standardHeaders:true,
-  // legacyHeaders:false,
-  // store: new RedisStore({
-  //   sendCommand :(...args) => redisClient.sendCommand(args),
-  //   prefix: "rl:otp",
-  // }),
-  // message:{
-  //   message:"Too many attempts. "
-  // }
+  windowMs:10 * 60 * 1000,
+  max:5,
+  standardHeaders:true,
+  legacyHeaders:false,
+  store: new RedisStore({
+    sendCommand :(...args) => redisClient.sendCommand(args),
+    prefix: "rl:otp",
+  }),
+  message:{
+    message:"Too many attempts. "
+  }
 });
 
 

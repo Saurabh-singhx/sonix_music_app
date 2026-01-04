@@ -14,4 +14,3 @@ if (!redisClient.isOpen) {
 }
 
 export default redisClient; 
-

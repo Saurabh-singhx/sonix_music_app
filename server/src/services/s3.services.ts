@@ -21,3 +21,37 @@ export async function createUploadUrl(
 
   return { uploadUrl, key };
 }
+
+
+export async function createImageUploadUrl(
+  userId: string,
+  imageType: "profile" | "gallery" | "cover",
+  fileType: string,
+  refId?: string
+) {
+
+  let key: string;
+
+  if (imageType === "profile") {
+    key = `users/${userId}/profile.jpg`;
+
+  } else if (imageType === "gallery") {
+    key = `users/${userId}/gallery/${crypto.randomUUID()}.jpg`;
+
+  } else {
+    if (!refId) throw new Error("refId (songId) required");
+    key = `songs/${refId}/cover.jpg`;
+  }
+
+  const command = new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME!,
+    Key: key,
+    ContentType: fileType,
+  });
+
+  const uploadUrl = await getSignedUrl(s3, command, {
+    expiresIn: 300,
+  });
+
+  return { uploadUrl, key };
+}

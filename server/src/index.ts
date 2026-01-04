@@ -1,3 +1,4 @@
+
 import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,15 +7,15 @@ import prisma from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoute from "./modules/admin/admin.routes.js";
 import redisClient from "./config/redis.js";
-import passport from "./config/passport.js";
+// import passport from "./config/passport.js";
 import { Server } from "http";
 
 dotenv.config();
 const app: Application = express();
 
-const PORT: number = Number(process.env.PORT) || 4001;
+const PORT: number = Number(process.env.PORT) || 4000;
 
-app.use(passport.initialize());
+// app.use(passport.initialize());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(cookieParser());

@@ -2,6 +2,7 @@ import { FieldValidationError, validationResult } from "express-validator";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { Request, Response, NextFunction } from "express";
+import { AuthenticatedRequest, AuthPayload, authUser } from "../types/request/auth.js";
 
 export const validate = (req: Request,res: Response,next: NextFunction): void => {
   const errors = validationResult(req);
@@ -30,11 +31,8 @@ export const validate = (req: Request,res: Response,next: NextFunction): void =>
   next();
 };
 
+// fix it later checkAuth optimize ====>
 
-
-interface AuthPayload extends JwtPayload {
-  userId: string;
-}
 
 export const protectRoute = async (req: Request,res: Response,next: NextFunction) => {
 
@@ -61,6 +59,7 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
     }
 
     const user = await prisma.user.findUnique({
+
       where: { user_id: decoded.userId },
       select: {
         user_id: true,
@@ -81,7 +80,7 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    req.user = user;
+    req.user = user as authUser;
     next();
 
   } catch (error) {
@@ -144,7 +143,7 @@ export const protectAdminRoute = async (req:Request,res : Response,next:NextFunc
       return res.status(401).json({ message: "Unauthorized User" });
     }
 
-    req.user = user;
+    (req as AuthenticatedRequest).user = user;
     next();
 
   } catch (error) {

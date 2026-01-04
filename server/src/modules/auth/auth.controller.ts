@@ -245,31 +245,32 @@ export const checkAuth = async (req: Request, res: Response) => {
 }
 
 
-export const googleAuth = async (req: Request, res: Response) => {
+// export const googleAuth = async (req: Request, res: Response) => {
 
-    const user= req.user;
-  try {
+//     const user= req;
 
-    if (!req.user) {
-      throw new Error("No user in request");
-    }
+//   try {
 
-    // generateToken(user.user_id, res);
+//     if (!user) {
+//       throw new Error("No user in request");
+//     }
 
-    const redirectUrl =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:5173"
-        : "";
+//     generateToken(user.user_id, res);
 
-    res.redirect(redirectUrl);
-  } catch (error) {
-    console.error("Error in Google signup", error);
+//     const redirectUrl =
+//       process.env.NODE_ENV === "development"
+//         ? "http://localhost:5173"
+//         : "";
 
-    res.redirect(
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:5173/login?error=oauth_failed"
-        : ""
-    );
-  }
-};
+//     res.redirect(redirectUrl);
+//   } catch (error) {
+//     console.error("Error in Google signup", error);
+
+//     res.redirect(
+//       process.env.NODE_ENV === "development"
+//         ? "http://localhost:5173/login?error=oauth_failed"
+//         : ""
+//     );
+//   }
+// };
 

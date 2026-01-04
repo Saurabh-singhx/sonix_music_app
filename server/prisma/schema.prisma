@@ -48,6 +48,8 @@ model Artist {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([artist_name])
 }
 
 model Song {
@@ -55,6 +57,7 @@ model Song {
   song_title  String  @db.VarChar(200)
   song_url    String
   artist_name String? @db.VarChar(50)
+  s3Key     String   @unique
 
   artist_id String? @db.Uuid
   artist    Artist? @relation(fields: [artist_id], references: [artist_id], onDelete: SetNull)

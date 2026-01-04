@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -13,24 +14,52 @@
     ],
     "esModuleInterop": true,
     "strict": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
   },
   "include": [
-    "src",
-    "src/types"
+    "src","src/types"
   ],
+  
   "exclude": [
     "node_modules",
     "dist",
     "generated"
   ],
+
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": "node"
   }
 }
+
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2022",
+//     "module": "NodeNext",
+//     "moduleResolution": "NodeNext",
+//     "rootDir": "./src",
+//     "outDir": "./dist",
+//     "types": ["node"],
+//     "lib": ["ES2022"],
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true,
+//     "resolveJsonModule": true,
+//     "sourceMap": true,
+//     "strict": true,
+//     "noUncheckedIndexedAccess": true,
+//     "exactOptionalPropertyTypes": true,
+//     "skipLibCheck": true,
+//     "noImplicitAny": false
+//   },
+//   "include": ["src/**/*"],
+//   "exclude": ["node_modules", "dist"],
+//   "ts-node": {
+//     "esm": true,
+//     "experimentalSpecifierResolution": "node",
+//     "transpileOnly": true
+//   }
+// }

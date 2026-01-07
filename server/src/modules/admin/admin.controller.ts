@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { createImageUploadUrl, createUploadUrl } from "../../services/s3.services.js";
 import { authUser } from "../../types/request/auth.js";
 import { artistBody, getSongUploadUrlBody, getUserProfileImgUploadUrl } from "../../types/request/admin.types.js";
+import { songBody } from "../../types/request/song.types.js";
 
 // export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, res : Response) => {
 
@@ -62,13 +63,13 @@ import { artistBody, getSongUploadUrlBody, getUserProfileImgUploadUrl } from "..
 export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, res: Response) => {
     const { fileName, fileType, fileSize } = req.body;
 
-    
+
     const user = req.user as authUser;
 
 
     try {
 
-        if(!fileName || !fileSize || !fileType){
+        if (!fileName || !fileSize || !fileType) {
             return res.status(400).json({ message: "all field required" });
         }
         if (!fileType.startsWith('audio/')) {
@@ -99,43 +100,102 @@ export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, r
 
 }
 
-export const createArtist =  async (req:Request<{}, {}, artistBody>,res:Response)=>{
 
-    const {artist_name,artist_bio} = req.body;
+export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Response) => {
+    const {
+        song_title,
+        artist_name,
+        song_url,
+        artist_id,
+        duration,
+        genre,
+        release_date,
+        cover_image_url,
+        tags,
+        mood,
+        energy_level,
+        language
+    } = req.body;
 
     try {
-        
-        if(!artist_name || !artist_bio){
+        const song = await prisma.song.create({
+            data: {
+                song_url,
+                song_title,
+                artist_name,
+                artist_id,
+                duration,
+                genre,
+                release_date,
+                cover_image_url,
+                tags,
+            }
+        });
+
+
+        if (!song) {
+            return res.status(400).json({message:"error while creating song-profile"})
+        }
+
+        const songAI = await prisma.songAIProfile.create({
+            data: {
+                song_id: song.song_id,
+                mood, energy_level,
+                language, vibe_tags: tags,
+                updated_at: Date.now().toString()
+            }
+        });
+
+        if(!songAI){
+            return res.status(400).json({message:"error while creating song-ai-profile"})
+        }
+
+        return res.status(201).json({message:"song details added",song,songAI})
+    } catch (error) {
+         const err = error as Error;
+        console.log("error in createArtist controller", err.message);
+        return res.status(500).json({ message: "Internal server error" })
+    }
+}
+
+export const createArtist = async (req: Request<{}, {}, artistBody>, res: Response) => {
+
+    const { artist_name, artist_bio } = req.body;
+
+    try {
+
+        if (!artist_name || !artist_bio) {
             return res.status(400).json({ message: "all fields are required" });
         }
 
         const artist = await prisma.artist.findUnique({
-            where:{artist_name:artist_name}
+            where: { artist_name: artist_name }
         });
 
-        if(artist){
+        if (artist) {
             return res.status(400).json({ message: "artist already exists" });
         }
 
         const newArtist = await prisma.artist.create({
-            data:{
-                artist_name:artist_name,
-                artist_bio:artist_bio,
-                isVerified:true
+            data: {
+                artist_name: artist_name,
+                artist_bio: artist_bio,
+                isVerified: true
             },
-            select:{
-                artist_id:true,
-                artist_bio:true,
-                artist_profilePic:true,
-                artist_name:true
+            select: {
+                artist_id: true,
+                artist_bio: true,
+                artist_profilePic: true,
+                artist_name: true,
+                isVerified:true
             }
         })
 
-        if(!newArtist){
+        if (!newArtist) {
             return res.status(400).json({ message: "error while creating newArtist" });
         }
 
-        res.status(200).json({message:"artist created",newArtist});
+        res.status(200).json({ message: "artist created", newArtist });
 
 
     } catch (error) {
@@ -145,15 +205,15 @@ export const createArtist =  async (req:Request<{}, {}, artistBody>,res:Response
     }
 }
 
-export const getArtistImageUploadUrl = async(req:Request<{}, {}, getUserProfileImgUploadUrl>,res:Response)=>{
+export const getArtistImageUploadUrl = async (req: Request<{}, {}, getUserProfileImgUploadUrl>, res: Response) => {
 
     // add validation ==----==>
 
-    const {userId,imageType,fileType,fileSize} = req.body;
+    const { userId, imageType, fileType, fileSize } = req.body;
 
     try {
-        
-        if(!userId || !imageType || fileType){
+
+        if (!userId || !imageType || !fileType) {
             return res.status(400).json({ message: "all fields reqired" })
         }
 
@@ -171,7 +231,7 @@ export const getArtistImageUploadUrl = async(req:Request<{}, {}, getUserProfileI
             fileType
         );
 
-        return res.status(201).json({message:"url created",result})
+        return res.status(201).json({ message: "url created", result })
 
 
     } catch (error) {
@@ -181,37 +241,36 @@ export const getArtistImageUploadUrl = async(req:Request<{}, {}, getUserProfileI
     }
 }
 
-export const setImages3Key = async(req:Request<{}, {}, {userId:string,profilePic:string}>,res:Response)=>{
-    const {userId,profilePic} = req.body;
+export const setImages3Key = async (req: Request<{}, {}, { userId: string, profilePic: string }>, res: Response) => {
+    const { userId, profilePic } = req.body;
 
     try {
-        if(!userId || !profilePic){
-            return res.status(400).json({message:"all feilds required"});
+        if (!userId || !profilePic) {
+            return res.status(400).json({ message: "all feilds required" });
         }
 
         const artist = await prisma.artist.findUnique({
-            where:{artist_id:userId}
+            where: { artist_id: userId }
         });
 
-        if(!artist){
-            return res.status(400).json({message:"user not exists"});
+        if (!artist) {
+            return res.status(400).json({ message: "user not exists" });
         }
 
         const updatedArtist = await prisma.artist.update({
-            where:{artist_id:userId},
-            data:{artist_profilePic:profilePic},
-            select:{
-                artist_id:true,
-                artist_bio:true,
-                artist_profilePic:true,
-                artist_name:true,
+            where: { artist_id: userId },
+            data: { artist_profilePic: profilePic },
+            select: {
+                artist_id: true,
+                artist_bio: true,
+                artist_name: true,
             }
         });
 
-        if(!updatedArtist){
-            return res.status(200).json({message:"error while updating artist",updatedArtist})
+        if (!updatedArtist) {
+            return res.status(200).json({ message: "error while updating artist", updatedArtist })
         }
-        return res.status(200).json({message:"artist pic updated",updatedArtist});
+        return res.status(200).json({ message: "artist pic updated", updatedArtist });
 
     } catch (error) {
         const err = error as Error;

@@ -76,11 +76,7 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
       return res.status(401).json({ message: "User not found" });
     }
 
-    if (user.role !== "ADMIN") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    req.user = user as authUser;
+    (req as AuthenticatedRequest).user = user;
     next();
 
   } catch (error) {

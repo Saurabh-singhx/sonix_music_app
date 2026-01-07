@@ -55,9 +55,8 @@ model Artist {
 model Song {
   song_id     String  @id @default(uuid()) @db.Uuid
   song_title  String  @db.VarChar(200)
-  song_url    String
-  artist_name String? @db.VarChar(50)
-  s3Key     String   @unique
+  song_url    String   @unique
+  artist_name String? @db.VarChar(50) 
 
   artist_id String? @db.Uuid
   artist    Artist? @relation(fields: [artist_id], references: [artist_id], onDelete: SetNull)

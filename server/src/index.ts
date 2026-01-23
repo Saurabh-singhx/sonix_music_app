@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import prisma from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
-import adminRoute from "./modules/admin/admin.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
+import userRoutes from "./modules/user/user.routes.js"
 import redisClient from "./config/redis.js";
 // import passport from "./config/passport.js";
 import { Server } from "http";
@@ -27,8 +28,10 @@ app.use(
   })
 );
 
-app.use("/api/v1/admin", adminRoute); 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/user",userRoutes)
+
 
 const startServer = async (): Promise<void> => {
   let server: Server;

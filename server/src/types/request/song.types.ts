@@ -9,7 +9,7 @@ export interface songBody {
     genre: string;
     release_date: string;
     cover_image_url: string;
-    tags: string[];
+    tags: string;
     mood: string; // happy, sad, chill, workout
     energy_level: string; // low, medium, high
     language: string;

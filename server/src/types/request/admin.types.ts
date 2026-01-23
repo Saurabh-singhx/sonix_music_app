@@ -8,7 +8,8 @@ export interface artistBody {
 export interface getSongUploadUrlBody {
     fileName: string,
     fileType: string,
-    fileSize: number
+    fileSize: number,
+    userId:string
 }
 
 export interface getUserProfileImgUploadUrl {

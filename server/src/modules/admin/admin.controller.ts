@@ -91,8 +91,7 @@ export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, r
             fileName,
             fileType
         );
-        console.log(userId)
-        return res.status(200).json(result);
+        return res.status(200).json({ result });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Internal server error" });
@@ -104,7 +103,6 @@ export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, r
 export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Response) => {
     const {
         song_title,
-        artist_name,
         song_url,
         artist_id,
         duration,
@@ -118,42 +116,67 @@ export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Respon
     } = req.body;
 
     try {
+
+
+        const newTags = Array.isArray(tags)
+            ? tags
+            : typeof tags === "string"
+                ? tags.split(',').map(t => t.trim()).filter(Boolean)
+                : [];
+
+
+        const artist = await prisma.artist.findUnique({
+            where: {
+                artist_id: artist_id
+            },
+            select: {
+                artist_name: true
+            }
+        })
+
+        if (!artist) {
+            return res.status(400).json({ message: "artist not found" })
+        }
+
+        const releaseDate =
+            release_date ? new Date(release_date):new Date(Date.now());
+
         const song = await prisma.song.create({
             data: {
                 song_url,
                 song_title,
-                artist_name,
+                artist_name: artist.artist_name,
                 artist_id,
                 duration,
                 genre,
-                release_date,
+                release_date: releaseDate,
                 cover_image_url,
-                tags,
+                tags: newTags,
             }
         });
 
 
         if (!song) {
-            return res.status(400).json({message:"error while creating song-profile"})
+            return res.status(400).json({ message: "error while creating song-profile" })
         }
 
         const songAI = await prisma.songAIProfile.create({
             data: {
                 song_id: song.song_id,
                 mood, energy_level,
-                language, vibe_tags: tags,
-                updated_at: Date.now().toString()
+                language, vibe_tags: newTags,
+                updated_at: new Date()
             }
         });
 
-        if(!songAI){
-            return res.status(400).json({message:"error while creating song-ai-profile"})
+        if (!songAI) {
+            return res.status(400).json({ message: "error while creating song-ai-profile" })
         }
 
-        return res.status(201).json({message:"song details added",song,songAI})
+        return res.status(201).json({ message: "song details added", song, songAI })
     } catch (error) {
-         const err = error as Error;
-        console.log("error in createArtist controller", err.message);
+        const err = error as Error;
+        console.log("error in addSongDetails controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
@@ -187,7 +210,7 @@ export const createArtist = async (req: Request<{}, {}, artistBody>, res: Respon
                 artist_bio: true,
                 artist_profilePic: true,
                 artist_name: true,
-                isVerified:true
+                isVerified: true
             }
         })
 
@@ -224,11 +247,12 @@ export const getArtistImageUploadUrl = async (req: Request<{}, {}, getUserProfil
         if (fileSize > 20 * 1024 * 1024) {
             return res.status(400).json({ message: "File too large" });
         }
-
+        const refId = userId;
         const result = await createImageUploadUrl(
             userId,
             imageType,
-            fileType
+            fileType,
+            refId
         );
 
         return res.status(201).json({ message: "url created", result })
@@ -236,7 +260,7 @@ export const getArtistImageUploadUrl = async (req: Request<{}, {}, getUserProfil
 
     } catch (error) {
         const err = error as Error;
-        console.log("error in createArtist controller", err.message);
+        console.log("error in getArtistImageUploadUrl controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }
@@ -275,6 +299,26 @@ export const setImages3Key = async (req: Request<{}, {}, { userId: string, profi
     } catch (error) {
         const err = error as Error;
         console.log("error in setImages3Key controller", err.message);
+        return res.status(500).json({ message: "Internal server error" })
+    }
+}
+
+
+export const getArtists = async (req: Request, res: Response) => {
+    try {
+        const artists = await prisma.artist.findMany({
+            select: {
+                artist_id: true,
+                artist_name: true,
+                artist_bio: true,
+                artist_profilePic: true, //fix presigned url <<<<<<
+                isVerified: true,
+            }
+        })
+        return res.status(200).json({ artists });
+    } catch (error) {
+        const err = error as Error;
+        console.log("error in getArtists controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
 }

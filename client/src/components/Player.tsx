@@ -3,7 +3,7 @@ import { useGlobalPlayer } from "@/hooks/usePlayer";
 
  function PlayerBar() {
   const {
-    current,
+    currentTrack,
     playing,
     toggle,
     seek,
@@ -13,7 +13,7 @@ import { useGlobalPlayer } from "@/hooks/usePlayer";
     prev,
   } = useGlobalPlayer();
 
-  if (!current) return null;
+  if (!currentTrack) return null;
 
   return (
     <div>

@@ -1,36 +1,50 @@
 // hooks/useGlobalPlayer.ts
 import { usePlayerStore } from "@/store/player/player.store";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAudioPlayer } from "react-use-audio-player";
 
 export function useGlobalPlayer() {
-  const {
-    current,
-    next,
-    prev,
-  } = usePlayerStore();
-
+  const { currentTrack, next, prev } = usePlayerStore();
   const player = useAudioPlayer();
 
-  // Load song when current changes
+  const [position, setPosition] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  // Load song
   useEffect(() => {
-    if (!current?.song_url) return;
+    if (!currentTrack?.song_url) return;
 
     player.stop();
-    player.load(current.song_url, {
-      autoplay: true,
+    player.load(currentTrack.song_url, {
       html5: true,
-      onend: () => next(),
+      onend: next,
+      
     });
+    player.play()
+  }, [currentTrack?.song_url, next]);
 
-  }, [current?.song_url]);
+  // Track playback position
+  useEffect(() => {
+    const update = () => {
+      if (player.isPlaying) {
+        setPosition(player.getPosition());
+      }
+      rafRef.current = requestAnimationFrame(update);
+    };
+
+    rafRef.current = requestAnimationFrame(update);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [player.isPlaying]);
 
   return {
     /* state */
-    current,
+    currentTrack,
     playing: player.isPlaying,
     duration: player.duration,
-    position: player.getPosition(),
+    position, // ✅ now reactive
 
     /* controls */
     play: player.play,

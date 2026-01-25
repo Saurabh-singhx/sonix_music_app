@@ -4,7 +4,7 @@ import { create } from "zustand";
 
 
 interface PlayerState {
-  current: song | null;
+  currentTrack: song | null;
   queue: song[];
   index: number;
 
@@ -16,7 +16,7 @@ interface PlayerState {
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
-  current: null,
+  currentTrack: null,
   queue: [],
   index: 0,
 
@@ -24,10 +24,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({
       queue: songs,
       index: startIndex,
-      current: songs[startIndex] ?? null,
+      currentTrack: songs[startIndex] ?? null,
     }),
 
-  setCurrent: (song) => set({ current: song }),
+  setCurrent: (song) => set({ currentTrack: song }),
 
   next: () => {
     const { queue, index } = get();
@@ -35,7 +35,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (!queue[nextIndex]) return;
     set({
       index: nextIndex,
-      current: queue[nextIndex],
+      currentTrack: queue[nextIndex],
     });
   },
 
@@ -45,9 +45,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (!queue[prevIndex]) return;
     set({
       index: prevIndex,
-      current: queue[prevIndex],
+      currentTrack: queue[prevIndex],
     });
   },
 
-  clear: () => set({ current: null, queue: [], index: 0 }),
+  clear: () => set({ currentTrack: null, queue: [], index: 0 }),
 }));

@@ -86,6 +86,9 @@ model Playlist {
 
   user  User           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   songs PlaylistSong[]
+
+  @@unique([user_id, playlist_name])
+  @@index([created_at])
 }
 
 model PlaylistSong {

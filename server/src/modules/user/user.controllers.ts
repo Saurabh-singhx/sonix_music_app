@@ -79,7 +79,7 @@ export const getAllSongs = async (req: Request, res: Response) => {
   }
 };
 
-
+// user-playlists controllers ==----==>
 export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: Response) => {
 
   const { name, description, isPublic } = req.body;
@@ -257,6 +257,82 @@ export const getPlaylistsSongs = async (req: Request, res: Response) => {
     res.status(200).json({ message: "playlist song fetched successfully", playlistSongs })
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
+// user-artists-controllers ==----==>
+export const getArtists = async (req: Request, res: Response) => {
+
+  try {
+
+    const artist = await prisma.artist.findMany({
+      take: 5,
+      orderBy: {
+        createdAt: "asc"
+      },
+    })
+
+    res.status(200).json({ message: "artists details fetched successfully", artist })
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+
+}
+
+
+export const getArtistsSongs = async (req: Request, res: Response) => {
+
+
+  // add pagination ==----==>
+
+  const { artistId } = req.params;
+
+  try {
+
+    if (!artistId) {
+      return res.status(400).json({ message: "all field required" });
+    }
+
+    const artist = await prisma.artist.findUnique({
+      where: {
+        artist_id: artistId
+      }
+    });
+
+
+    if (!artist) {
+      return res.status(404).json({ message: "Invalid artistId" })
+    }
+
+    const songs = await prisma.song.findMany({
+      where: {
+        artist_id: artistId
+      },
+      select: {
+        song_id: true,
+        song_title: true,
+        song_url: true,
+        cover_image_url: true,
+        release_date: true,
+        duration: true,
+        artist: {
+          select: {
+            artist_id: true,
+            artist_bio: true,
+            artist_name: true,
+            artist_profilePic: true,
+          },
+        },
+      },
+    });
+
+
+    res.status(200).json({message:"artist's songs fetched successfully"})
+  } catch (error) {
+     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }

@@ -22,7 +22,7 @@ export const validate = (req: Request,res: Response,next: NextFunction): void =>
 
     res.status(400).json({
       success: false,
-      errors: formattedErrors,
+      message: formattedErrors[0],
     });
     
     return;

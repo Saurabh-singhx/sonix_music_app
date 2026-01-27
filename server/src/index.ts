@@ -8,6 +8,8 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import userRoutes from "./modules/user/user.routes.js"
 import redisClient from "./config/redis.js";
+import "./cron/updateTrending.js"
+
 // import passport from "./config/passport.js";
 import { Server } from "http";
 

@@ -74,6 +74,8 @@ model Song {
   songEvents      UserSongEvent[]
   aiProfile       SongAIProfile?
   recommendations Recommendation[]
+  trending TrendingSong?
+
 }
 
 model Playlist {
@@ -184,4 +186,15 @@ model UserPreference {
   preferred_language String[]
 
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model TrendingSong {
+  song_id    String   @id @db.Uuid
+  score      Int
+  rank       Int
+  updated_at DateTime @updatedAt
+
+  song Song @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
+
+  @@index([rank])
 }

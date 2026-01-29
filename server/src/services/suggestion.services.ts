@@ -1,6 +1,6 @@
 import prisma from "../lib/prisma.js";
 
-const EVENT_SCORES: Record<string, number> = {
+const EVENT_SCORES: Record<string, number> = { //need fixing here <<==----==
   PLAY: 2,
   COMPLETE: 4,
   REPEAT: 3,
@@ -8,20 +8,14 @@ const EVENT_SCORES: Record<string, number> = {
 };
 
 const LIKE_SCORE = 5;
-const TRENDING_LIMIT = 20;
+const TRENDING_LIMIT = 100;
 const TIME_WINDOW_HOURS = 24*7;
 
-export async function calculateTrending() {
-  const since = new Date(
-    Date.now() - TIME_WINDOW_HOURS * 60 * 60 * 1000
-  );
+export const calculateSongSuggestion = async()=> {
 
   // Aggregate song events ==----==>
   const eventAgg = await prisma.userSongEvent.groupBy({
     by: ["song_id", "event_type"],
-    where: {
-      created_at: { gte: since }
-    },
     _count: {
       _all: true
     }
@@ -30,9 +24,6 @@ export async function calculateTrending() {
   // Aggregate likes ==----==>
   const likeAgg = await prisma.likedSong.groupBy({
     by: ["song_id"],
-    where: {
-      liked_at: { gte: since }
-    },
     _count: {
       _all: true
     }
@@ -61,27 +52,11 @@ export async function calculateTrending() {
   }
 
   // Sort & limit ==----==>
-  const trending = [...scoreMap.entries()]
+  const suggestion = [...scoreMap.entries()]
     .map(([songId, score]) => ({ songId, score }))
     .filter(s => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, TRENDING_LIMIT);
 
-  return trending;
-}
-
-// Update Trending Table ==----==>
-export async function updateTrendingTable() {
-  const trending = await calculateTrending();
-
-  await prisma.$transaction([
-    prisma.trendingSong.deleteMany(),
-    prisma.trendingSong.createMany({
-      data: trending.map((t, index) => ({
-        song_id: t.songId,
-        score: t.score,
-        rank: index + 1
-      }))
-    })
-  ]);
+  return suggestion;
 }

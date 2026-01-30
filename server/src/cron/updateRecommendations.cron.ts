@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { updateRecommendations } from "../services/recommendation.services.js";
+import { updateRecommendationsSummary, updateRecommendationWithAi } from "../services/recommendation.services.js";
 import prisma from "../lib/prisma.js";
 
 cron.schedule("0 */3 * * *", async () => {
@@ -8,6 +8,10 @@ cron.schedule("0 */3 * * *", async () => {
 
 
         const users = await prisma.user.findMany({
+
+            // where:{
+            //     role:'USER'  
+            // },
             select: {
                 user_id: true
             }
@@ -17,10 +21,16 @@ cron.schedule("0 */3 * * *", async () => {
             console.log("no users found");
             return;
         }
-
+        let summary = "";
 
         for (const user of users) {
-            await updateRecommendations(user.user_id);
+            summary += await updateRecommendationsSummary(user.user_id);
+
+            if(!summary){
+                continue;
+            }
+            await updateRecommendationWithAi(summary,user.user_id);
+            summary = "";
         }
 
 

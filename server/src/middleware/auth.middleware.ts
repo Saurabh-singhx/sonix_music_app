@@ -3,8 +3,9 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { Request, Response, NextFunction } from "express";
 import { AuthenticatedRequest, AuthPayload, authUser } from "../types/request/auth.js";
+import redisClient from "../config/redis.js";
 
-export const validate = (req: Request,res: Response,next: NextFunction): void => {
+export const validate = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -24,7 +25,7 @@ export const validate = (req: Request,res: Response,next: NextFunction): void =>
       success: false,
       message: formattedErrors[0],
     });
-    
+
     return;
   }
 
@@ -34,10 +35,10 @@ export const validate = (req: Request,res: Response,next: NextFunction): void =>
 // fix it later checkAuth optimize ====>
 
 
-export const protectRoute = async (req: Request,res: Response,next: NextFunction) => {
+export const protectRoute = async (req: Request, res: Response, next: NextFunction) => {
 
   try {
-    const token : string = req.cookies?.jwtauth;
+    const token: string = req.cookies?.jwtauth;
 
     if (!token) {
       res.status(401).json({ message: "Try logging in" });
@@ -50,7 +51,7 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
 
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET,{algorithms: ["HS256"],}
+      process.env.JWT_SECRET, { algorithms: ["HS256"], }
     ) as AuthPayload;
 
     if (!decoded.userId) {
@@ -58,25 +59,64 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
       return;
     }
 
-    const user = await prisma.user.findUnique({
+    const rediUser = await redisClient.get(`userData:${decoded.userId}`);
 
-      where: { user_id: decoded.userId },
-      select: {
-        user_id: true,
-        user_email: true,
-        user_name: true,
-        user_profile_pic: true,
-        gender: true,
-        date_of_birth: true,
-        role: true,
-      },
-    });
+    if (!rediUser) {
+      const user = await prisma.user.findUnique({
 
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
+        where: { user_id: decoded.userId },
+        select: {
+          user_id: true,
+          user_email: true,
+          user_name: true,
+          user_profile_pic: true,
+          gender: true,
+          date_of_birth: true,
+          role: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const date = user.date_of_birth?.toISOString();
+      const key = `userData:${decoded.userId}`;
+
+
+      const userValue = JSON.stringify({
+        user_id: user.user_id,
+        user_email: user.user_email,
+        user_name: user.user_name,
+        user_profile_pic: user.user_profile_pic,
+        gender: user.gender,
+        date_of_birth: date,
+        role: user.role,
+      })
+      await redisClient.set(key, userValue, { EX: 30 });
+
+      (req as AuthenticatedRequest).user = user;
+
+    } else {
+
+      const redisUserdata: authUser = JSON.parse(rediUser)
+      if (redisUserdata.user_id === decoded.userId) {
+        (req as AuthenticatedRequest).user = {
+          user_id: redisUserdata.user_id,
+          user_email: redisUserdata.user_email,
+          user_name: redisUserdata.user_name,
+          user_profile_pic: redisUserdata.user_profile_pic,
+          gender: redisUserdata.gender,
+          date_of_birth: new Date(redisUserdata.date_of_birth!),
+          role: redisUserdata.role
+        };
+      } else {
+        console.log("error in protect route")
+        return res.status(400).json({ message: "error while verifiying user" })
+      }
+
     }
 
-    (req as AuthenticatedRequest).user = user;
     next();
 
   } catch (error) {
@@ -91,16 +131,16 @@ export const protectRoute = async (req: Request,res: Response,next: NextFunction
 
     console.error("Admin auth error:", error);
     return res.status(500).json({ message: "Internal server error" });
-  
+
   }
 };
 
 
-export const protectAdminRoute = async (req:Request,res : Response,next:NextFunction)=>{
+export const protectAdminRoute = async (req: Request, res: Response, next: NextFunction) => {
 
   try {
-    
-    const token:string = req.cookies?.jwtauth;
+
+    const token: string = req.cookies?.jwtauth;
 
     if (!token) {
       return res.status(401).json({ message: "no token provided" });
@@ -122,24 +162,72 @@ export const protectAdminRoute = async (req:Request,res : Response,next:NextFunc
     }
 
 
-    const user = await prisma.user.findUnique({
-      where: { user_id: decoded.userId },
-      select: {
-        user_id: true,
-        user_email: true,
-        user_name: true,
-        user_profile_pic: true,
-        gender: true,
-        date_of_birth: true,
-        role: true,
-      },
-    });
+    const rediUser = await redisClient.get(`userData:${decoded.userId}`);
 
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({ message: "Unauthorized User" });
+    if (!rediUser) {
+      const user = await prisma.user.findUnique({
+
+        where: { user_id: decoded.userId },
+        select: {
+          user_id: true,
+          user_email: true,
+          user_name: true,
+          user_profile_pic: true,
+          gender: true,
+          date_of_birth: true,
+          role: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+       if(user.role !== 'ADMIN'){ //fix create admin table to store user ids
+          return res.status(401).json({message:"unauthorize user"})
+        }
+
+      const date = user.date_of_birth?.toISOString();
+      const key = `userData:${decoded.userId}`;
+
+
+      const userValue = JSON.stringify({
+        user_id: user.user_id,
+        user_email: user.user_email,
+        user_name: user.user_name,
+        user_profile_pic: user.user_profile_pic,
+        gender: user.gender,
+        date_of_birth: date,
+        role: user.role,
+      })
+      await redisClient.set(key, userValue, { EX: 30 });
+
+      (req as AuthenticatedRequest).user = user;
+
+    } else {
+
+      const redisUserdata: authUser = JSON.parse(rediUser)
+      if (redisUserdata.user_id === decoded.userId) {
+
+        if(redisUserdata.role !== 'ADMIN'){//fix create admin table to store user ids
+          return res.status(401).json({message:"unauthorize user"})
+        }
+
+        (req as AuthenticatedRequest).user = {
+          user_id: redisUserdata.user_id,
+          user_email: redisUserdata.user_email,
+          user_name: redisUserdata.user_name,
+          user_profile_pic: redisUserdata.user_profile_pic,
+          gender: redisUserdata.gender,
+          date_of_birth: new Date(redisUserdata.date_of_birth!),
+          role: redisUserdata.role
+        };
+      } else {
+        console.log("error in protect route")
+        return res.status(400).json({ message: "error while verifiying user" })
+      }
+
     }
-
-    (req as AuthenticatedRequest).user = user;
     next();
 
   } catch (error) {
@@ -153,6 +241,6 @@ export const protectAdminRoute = async (req:Request,res : Response,next:NextFunc
 
     console.error("Admin auth error:", error);
     return res.status(500).json({ message: "Internal server error" });
-  
+
   }
 }

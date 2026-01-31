@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { updateRecommendationsSummary, updateRecommendationWithAi } from "../services/recommendation.services.js";
 import prisma from "../lib/prisma.js";
 
-cron.schedule("0 */3 * * *", async () => {
+cron.schedule("*/1 * * * *", async () => {
     try {
         console.log("⏳ Updating recommendations songs...");
 
@@ -24,17 +24,23 @@ cron.schedule("0 */3 * * *", async () => {
         let summary = "";
 
         for (const user of users) {
-            summary += await updateRecommendationsSummary(user.user_id);
 
-            if(!summary){
+            console.log("creating summary...")
+            summary += await updateRecommendationsSummary(user.user_id); //fix here
+
+            if(!summary.length){
+                console.log(`no summary found for ${user.user_id}`)
                 continue;
             }
-            await updateRecommendationWithAi(summary,user.user_id);
+
+            console.log(`updating recommendations... for user ${user.user_id}`)
+            
+            await updateRecommendationWithAi(summary,user.user_id);//fix here
             summary = "";
         }
 
 
-        console.log("✅ recommendations updated");
+        console.log("✅ recommendations updated");//fix here
     } catch (err) {
         console.error("❌ recommendation cron failed", err);
     }

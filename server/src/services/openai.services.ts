@@ -8,12 +8,12 @@ export type AiRecommendation = {
 };
 
 export const aiResponseRecommendations = async (
-  summary: string,
-  songDataDetails: string
+  summary: string,//fix here
+  songDataDetails: string//fix here
 ): Promise<AiRecommendation[] | null> => {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       temperature: 0,
       messages: [
         {

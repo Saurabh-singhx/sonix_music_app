@@ -1,19 +1,20 @@
 
 import express, { Application } from "express";
-import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import prisma from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import userRoutes from "./modules/user/user.routes.js"
 import redisClient from "./config/redis.js";
-import "./cron/updateTrending.js"
+// import "./cron/updateTrending.js"
+// import "./cron/updateRecommendations.cron.js"
 
 // import passport from "./config/passport.js";
 import { Server } from "http";
 
-dotenv.config();
 const app: Application = express();
 
 const PORT: number = Number(process.env.PORT) || 4000;

@@ -12,7 +12,7 @@ const LIKE_SCORE = 5;
 const TRENDING_LIMIT = 20;
 const TIME_WINDOW_HOURS = 24 * 7;
 
-export async function calculateTrending() {
+export async function calculateTrending() {   //fix here <<==----==
 
   try {
     const since = new Date(

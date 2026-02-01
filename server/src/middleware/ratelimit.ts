@@ -121,3 +121,138 @@ export const checkAuthLimiter = rateLimit({
 
 
 
+// Admin rate limit form here ==----==>
+
+
+export const getUploadSongUrlLimiter = rateLimit({
+  windowMs:60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:getUploadSongUrl:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many uploadsongurl requests. Try again later."
+    });
+  },
+});
+
+export const createArtistLimiter = rateLimit({
+  windowMs:24 * 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:createArtist:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many create artist requests. Try again later."
+    });
+  },
+});
+
+export const getUploadImageUrlLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:getUploadImageUrl:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many uploadimageurl requests. Try again later."
+    });
+  },
+});
+
+export const updateImages3keyLimiter = rateLimit({
+  windowMs:60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:updateImages3key:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many update image key requests. Try again later."
+    });
+  },
+
+});
+
+export const updateSongs3keyLimiter = rateLimit({
+  windowMs:60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:updateSongs3key:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many update song key requests. Try again later."
+    });
+  },
+
+});
+
+export const getArtistsLimiter = rateLimit({
+  windowMs:60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+
+  store: new RedisStore({
+    prefix: "rl:getArtists:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many update artists data requests. Try again later."
+    });
+  },
+
+});
+
+
+
+

@@ -12,9 +12,9 @@ import { checkAuthLimiter, loginLimiter, logOutLimiter, otpLimiter, signupLimite
 const router = express.Router();
 
 
-router.post("/otp",otpLimiter, checkEmailValidation,validate, otpSend);
-router.post("/signup",signupLimiter, checkSignupValidation,validate,signup);
-router.post("/login",loginLimiter, checkLoginValidation,validate,login);
+router.post("/otp",checkEmailValidation,validate,otpLimiter, otpSend);
+router.post("/signup", checkSignupValidation,validate,signupLimiter,signup);
+router.post("/login", checkLoginValidation,validate,loginLimiter,login);
 router.post("/logout",logOutLimiter, logout);
 // router.get("/google",passport.authenticate("google", { scope: ["profile", "email"],session: false }));
 // router.get("/google/callback",passport.authenticate("google", { failureMessage: true, session: false }),googleAuth);

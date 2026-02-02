@@ -270,7 +270,7 @@ export const setImages3Key = async (req: Request<{}, {}, { userId: string, profi
 
     try {
         if (!userId || !profilePic) {
-            return res.status(400).json({ message: "all feilds required" });
+            return res.status(400).json({ message: "all fields required" });
         }
 
         const artist = await prisma.artist.findUnique({
@@ -278,7 +278,7 @@ export const setImages3Key = async (req: Request<{}, {}, { userId: string, profi
         });
 
         if (!artist) {
-            return res.status(400).json({ message: "user not exists" });
+            return res.status(404).json({ message: "artist not exists" });
         }
 
         const updatedArtist = await prisma.artist.update({
@@ -291,9 +291,6 @@ export const setImages3Key = async (req: Request<{}, {}, { userId: string, profi
             }
         });
 
-        if (!updatedArtist) {
-            return res.status(200).json({ message: "error while updating artist", updatedArtist })
-        }
         return res.status(200).json({ message: "artist pic updated", updatedArtist });
 
     } catch (error) {

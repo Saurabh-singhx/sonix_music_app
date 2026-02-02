@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/otp",checkEmailValidation,validate,otpLimiter, otpSend);
 router.post("/signup", checkSignupValidation,validate,signupLimiter,signup);
 router.post("/login", checkLoginValidation,validate,loginLimiter,login);
-router.post("/logout",logOutLimiter, logout);
+router.post("/logout",logOutLimiter,protectRoute,logout);
 // router.get("/google",passport.authenticate("google", { scope: ["profile", "email"],session: false }));
 // router.get("/google/callback",passport.authenticate("google", { failureMessage: true, session: false }),googleAuth);
 router.get("/checkauth",checkAuthLimiter, protectRoute,checkAuth);

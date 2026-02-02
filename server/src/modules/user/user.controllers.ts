@@ -79,6 +79,112 @@ export const getAllSongs = async (req: Request, res: Response) => {
   }
 };
 
+export const getRecommendedSongs = async (req: Request, res: Response) => {
+
+  const limit = Number(req.query.limit) || 10;
+  const cursor = req.query.cursor as string | undefined;
+
+  const user = req.user as authUser;
+
+  try {
+
+    const recommendedSongs = await prisma.recommendation.findMany({
+      where: {
+        user_id: user.user_id,
+      },
+      take: limit + 1,
+      ...(cursor && {
+        skip: 1,
+        cursor: { id: cursor },
+      }),
+      orderBy: {
+        score: "desc"
+      },
+
+      select: {
+        id:true,
+        score: true,
+        song: {
+          select: {
+            song_id: true,
+            song_title: true,
+            song_url: true,
+            cover_image_url: true,
+            release_date: true,
+            duration: true,
+            artist: {
+              select: {
+                artist_id: true,
+                artist_bio: true,
+                artist_name: true,
+                artist_profilePic: true,
+              },
+            },
+          },
+        }
+      }
+
+    });
+
+      let nextCursor: string | null = null;
+
+    if (recommendedSongs.length > limit) {
+      const nextItem = recommendedSongs.pop();
+      nextCursor = nextItem!.id;
+    }
+
+    return res.status(200).json({
+      songs: recommendedSongs,
+      nextCursor,
+    });
+  } catch (error) {
+     console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export const getTrendingSongs = async (req: Request, res: Response) => {
+
+  try {
+    const trendingSongs = await prisma.trendingSong.findMany({
+      take: 10,
+      orderBy: {
+        rank: "asc"
+      },
+      select: {
+        rank: true,
+        score: true,
+        song: {
+          select: {
+            song_id: true,
+            song_title: true,
+            song_url: true,
+            cover_image_url: true,
+            release_date: true,
+            duration: true,
+            artist: {
+              select: {
+                artist_id: true,
+                artist_bio: true,
+                artist_name: true,
+                artist_profilePic: true,
+              },
+            },
+          },
+        }
+      }
+
+    });
+
+
+    res.status(200).json({ message: "trending song fetched successfully", trendingSongs });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+
+}
+
 // user-playlists controllers ==----==>
 export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: Response) => {
 
@@ -330,9 +436,10 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
     });
 
 
-    res.status(200).json({message:"artist's songs fetched successfully"})
+    res.status(200).json({ message: "artist's songs fetched successfully" })
   } catch (error) {
-     console.error(error);
+    console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+

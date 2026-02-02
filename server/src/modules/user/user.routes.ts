@@ -1,6 +1,6 @@
 import express from "express";
 import { protectRoute, validate } from "../../middleware/auth.middleware.js";
-import { getAllPlaylist, getAllSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistsSongs, getPublicPlaylists } from "./user.controllers.js";
+import { getAllPlaylist, getAllSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistsSongs, getPublicPlaylists, getRecommendedSongs, getTrendingSongs } from "./user.controllers.js";
 import { createArtist } from "../admin/admin.controller.js";
 import { createPlaylistValidator, getPlaylistsSongsValidator } from "./validations/user.validators.js";
 
@@ -8,6 +8,8 @@ const router = express.Router();
 
 // add rate limit and validations ==----==>
 router.get("/songs",protectRoute,getAllSongs);
+router.get("/recommended-songs",protectRoute,getRecommendedSongs);
+router.get("/trending-songs",protectRoute,getTrendingSongs);
 
 // playlists routes ==----==>
 router.post("createplaylist",

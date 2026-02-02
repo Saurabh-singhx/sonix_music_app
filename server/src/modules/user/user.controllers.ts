@@ -87,7 +87,7 @@ export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: 
 
   try {
 
-    if (!name || !description || !isPublic) {
+    if (!name || !description) {
       return res.status(400).json({ message: "all fields required" })
     }
 
@@ -101,7 +101,7 @@ export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: 
     })
 
     if (checkPlaylist) {
-      return res.status(400).json({ message: `playlist named ${name} already exists` })
+      return res.status(409).json({ message: `playlist named ${name} already exists` })
     }
 
     const newPlaylist = await prisma.playlist.create({

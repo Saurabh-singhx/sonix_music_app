@@ -1,21 +1,28 @@
 import express from "express";
-import { protectRoute } from "../../middleware/auth.middleware.js";
+import { protectRoute, validate } from "../../middleware/auth.middleware.js";
 import { getAllPlaylist, getAllSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistsSongs, getPublicPlaylists } from "./user.controllers.js";
 import { createArtist } from "../admin/admin.controller.js";
+import { createPlaylistValidator, getPlaylistsSongsValidator } from "./validations/user.validators.js";
 
 const router = express.Router();
 
 // add rate limit and validations ==----==>
-
 router.get("/songs",protectRoute,getAllSongs);
 
 // playlists routes ==----==>
-
-router.post("createplaylist",protectRoute,createArtist);
+router.post("createplaylist",
+    createPlaylistValidator,validate,
+    protectRoute,
+    createArtist
+);
 router.get("/getmyplaylists",protectRoute,getMyPlaylists);
 router.get("/getpublicplaylists",protectRoute,getPublicPlaylists);
 router.get("/getallplaylists",protectRoute,getAllPlaylist);
-router.get("/getplaylistsongs/:playlistId",protectRoute,getPlaylistsSongs);
+router.get("/getplaylistsongs/:playlistId",
+    getPlaylistsSongsValidator,validate,
+    protectRoute,
+    getPlaylistsSongs
+);
 
 // artist details routes ==----==>
 router.get("/getartist",protectRoute,getArtists);

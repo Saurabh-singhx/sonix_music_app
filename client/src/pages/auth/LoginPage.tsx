@@ -1,26 +1,13 @@
 import { useState } from "react";
-import { 
-  Music, 
-  Mail, 
-  Lock, 
-  ArrowRight, 
-  Github, 
-  Twitter, 
-  Disc,
-  Headphones,
-  Volume2
-} from 'lucide-react';
+import { Mail, Lock, ArrowRight, } from 'lucide-react';
 import { motion} from 'framer-motion';
 
 import { BackgroundOrbs } from "@/components/BackgroundOrbs";
-import { VisualizerBar } from "@/components/VisualizerBar";
 import { InputField } from "@/components/InputField";
 import { useNavigate } from "react-router-dom";
 import AuthMusiCard from "@/components/AuthMusiCard";
 
-/**
- * Main Login Page Component
- */
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -105,7 +92,7 @@ export default function LoginPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <motion.div 

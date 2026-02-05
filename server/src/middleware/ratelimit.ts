@@ -1,33 +1,34 @@
-import {rateLimit} from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import redisClient from "../config/redis.js";
-
-
-
+import {Request} from "express"
 // auth routes ==----==>
 /**
  * LOGIN rate limit
  * 5 attempts / 15 minutes
  */
 export const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
 
-    keyGenerator: (req) => `${req.body?.email ?? "unknown"}`,
+  // keyGenerator: (req:Request) => {
+  //   const user = req.body?.email ?? "anon";
+  //   return `${ipKeyGenerator(req.ip!)}:${user}`;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:login:",
+  }),
 
-    store: new RedisStore({
-      sendCommand: (...args) => redisClient.sendCommand(args),
-      prefix: "rl:login:", 
-    }),
-
-    handler: (_req, res) => {
-      res.status(429).json({
-        message: "Too many login requests. Try again after 15 minutes."
-      });
-    }
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many login requests. Try again after 15 minutes."
+    });
+  }
 });
 
 /**
@@ -35,18 +36,23 @@ export const loginLimiter = rateLimit({
  * 10 requests / 1 hour
  */
 export const signupLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 10, 
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
 
-    keyGenerator: (req) => `${req.body?.email ?? "unknown"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   const user = req.body?.email ?? "anon";
+  //   return `${ip}:${user}`;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
-    store: new RedisStore({
-      sendCommand: (...args) => redisClient.sendCommand(args),
-      prefix: "rl:signup:", 
-    }),
-    handler: (_req, res) => {
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:signup:",
+  }),
+  handler: (_req, res) => {
     res.status(429).json({
       message: "Too many signup requests. Try again after 1 hour."
     });
@@ -56,12 +62,17 @@ export const signupLimiter = rateLimit({
 // otp rate limit  5 request / 10 minutes
 
 export const otpLimiter = rateLimit({
-  windowMs:10 * 60 * 1000,
-  max:5,
-  standardHeaders:true,
-  legacyHeaders:false,
-  
-  keyGenerator: (req) => `${req.body?.email ?? "unknown"}`,
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   const user = req.body?.email ?? "anon";
+  //   return `${ip}:${user}`;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     sendCommand: (...args) => redisClient.sendCommand(args),
@@ -83,7 +94,11 @@ export const logOutLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) => `${req.ip}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:logout:",
@@ -104,8 +119,11 @@ export const checkAuthLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:checkAuth:",
@@ -125,13 +143,16 @@ export const checkAuthLimiter = rateLimit({
 
 
 export const getUploadSongUrlLimiter = rateLimit({
-  windowMs:60 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:getUploadSongUrl:",
@@ -146,13 +167,16 @@ export const getUploadSongUrlLimiter = rateLimit({
 });
 
 export const createArtistLimiter = rateLimit({
-  windowMs:24 * 60 * 60 * 1000,
+  windowMs: 24 * 60 * 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:createArtist:",
@@ -172,8 +196,11 @@ export const getUploadImageUrlLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:getUploadImageUrl:",
@@ -188,13 +215,16 @@ export const getUploadImageUrlLimiter = rateLimit({
 });
 
 export const updateImages3keyLimiter = rateLimit({
-  windowMs:60 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+  // keyGenerator: (req:Request) => {
+  //   const ip = ipKeyGenerator(req.ip!);
+  //   return ip;
+  // },
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:updateImages3key:",
@@ -210,13 +240,16 @@ export const updateImages3keyLimiter = rateLimit({
 });
 
 export const updateSongs3keyLimiter = rateLimit({
-  windowMs:60 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+//  keyGenerator: (req:Request) => {
+//     const ip = ipKeyGenerator(req.ip!);
+//     return ip;
+//   },
+keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:updateSongs3key:",
@@ -232,13 +265,12 @@ export const updateSongs3keyLimiter = rateLimit({
 });
 
 export const getArtistsLimiter = rateLimit({
-  windowMs:60 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator: (req) =>
-    `${req.ip}:${req.cookies?.jwtauth ?? "anon"}`,
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
 
   store: new RedisStore({
     prefix: "rl:getArtists:",
@@ -252,7 +284,3 @@ export const getArtistsLimiter = rateLimit({
   },
 
 });
-
-
-
-

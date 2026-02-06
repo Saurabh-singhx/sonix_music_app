@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import type { Variants } from "framer-motion"
 import {
-  Music,
   Mail,
   Lock,
   ArrowRight,
@@ -12,272 +11,31 @@ import {
   Calendar,
   Check,
   ShieldCheck,
-  Disc,
   UserCircle
 } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import AuthMusiCard from '@/components/AuthMusiCard';
+import { BackgroundOrbs } from '@/components/BackgroundOrbs';
+import { InputField } from '@/components/InputField';
+import { GenderCard } from '@/components/GenderCard';
+import { OTPInput } from '@/components/OtpInput';
+import { useAuthStore } from '@/store/auth/auth.store';
+import type { SignupPayload } from '@/types/auth.types';
 
-// Utility for cleaner tailwind classes
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-// --- Components ---
-
-/**
- * Simulated Audio Visualizer Bar
- */
-const VisualizerBar = ({ delay }: { delay: number }) => {
-  return (
-    <motion.div
-      className="w-1.5 bg-gradient-to-t from-indigo-500 to-purple-400 rounded-full opacity-80"
-      animate={{
-        height: [10, 40, 15, 60, 20],
-        opacity: [0.5, 1, 0.5, 1, 0.5],
-      }}
-      transition={{
-        duration: 1.2,
-        repeat: Infinity,
-        repeatType: "reverse",
-        delay: delay,
-        ease: "easeInOut",
-      }}
-    />
-  );
-};
-
-/**
- * Animated Background Gradient Orbs
- */
-const BackgroundOrbs = () => {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.5, 0.3],
-          x: [0, 50, 0],
-          y: [0, -30, 0]
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[100px]"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.2, 0.4, 0.2],
-          x: [0, -40, 0],
-          y: [0, 60, 0]
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/30 rounded-full blur-[120px]"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.1, 0.3, 0.1],
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute top-[40%] left-[40%] w-[400px] h-[400px] bg-blue-900/20 rounded-full blur-[90px]"
-      />
-    </div>
-  );
-};
-
-/**
- * Input Field Component with Floating Label
- */
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  icon: React.ReactNode;
-  error?: string;
-}
-
-const InputField = ({ label, icon, error, className, ...props }: InputFieldProps) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(false);
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    setIsFocused(true);
-    props.onFocus?.(e);
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setIsFocused(false);
-    setHasValue(e.target.value.length > 0);
-    props.onBlur?.(e);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHasValue(e.target.value.length > 0);
-    props.onChange?.(e);
-  };
-
-  const isActive = isFocused || hasValue;
-
-  return (
-    <div className={cn("relative group", className)}>
-      <div className={cn(
-        "absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300",
-        isActive ? "text-indigo-400" : "text-slate-500"
-      )}>
-        {icon}
-      </div>
-
-      <input
-        {...props}
-        className={cn(
-          "w-full bg-slate-900/50 border border-slate-700 rounded-xl py-4 pl-10 pr-4 text-slate-100 placeholder-transparent focus:outline-none transition-all duration-300",
-          "focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 focus:bg-slate-900/80",
-          error && "border-red-500 focus:border-red-500 focus:ring-red-500/50"
-        )}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        placeholder={label}
-      />
-
-      <label
-        className={cn(
-          "absolute left-10 transition-all duration-300 pointer-events-none origin-left",
-          isActive
-            ? "-top-2.5 text-xs text-indigo-400 bg-slate-950 px-1 rounded"
-            : "top-1/2 -translate-y-1/2 text-slate-500 text-base"
-        )}
-      >
-        {label}
-      </label>
-
-      <motion.div
-        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500"
-        initial={{ width: "0%" }}
-        animate={{ width: isFocused ? "100%" : "0%" }}
-        transition={{ duration: 0.3 }}
-      />
-    </div>
-  );
-};
-
-/**
- * Gender Selection Card
- */
-const GenderCard = ({
-  selected,
-  label,
-  icon,
-  onClick
-}: {
-  selected: boolean;
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-}) => {
-  return (
-    <motion.button
-      type="button"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={cn(
-        "relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-300",
-        selected
-          ? "bg-indigo-500/10 border-indigo-500 text-indigo-400"
-          : "bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-600"
-      )}
-    >
-      {selected && (
-        <motion.div
-          layoutId="gender-check"
-          className="absolute top-2 right-2"
-        >
-          <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
-            <Check className="w-3 h-3 text-white" />
-          </div>
-        </motion.div>
-      )}
-      <div className={cn(
-        "p-2 rounded-full transition-colors",
-        selected ? "bg-indigo-500/20" : "bg-slate-800"
-      )}>
-        {icon}
-      </div>
-      <span className="text-sm font-medium">{label}</span>
-    </motion.button>
-  );
-};
-
-/**
- * OTP Input Component
- */
-const OTPInput = ({ length = 6, onComplete }: { length?: number; onComplete: (otp: string) => void }) => {
-  const [otp, setOtp] = useState(new Array(length).fill(""));
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const value = e.target.value;
-    if (isNaN(Number(value))) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
-    setOtp(newOtp);
-
-    const combinedOtp = newOtp.join("");
-    if (combinedOtp.length === length) onComplete(combinedOtp);
-
-    if (value && index < length - 1 && inputRefs.current[index + 1]) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleClick = (index: number) => {
-    inputRefs.current[index]?.setSelectionRange(1, 1);
-    if (index > 0 && !otp[index - 1]) {
-      inputRefs.current[otp.indexOf("")]?.focus();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  return (
-    <div className="flex justify-center gap-3">
-      {otp.map((_, index) => (
-        <input
-          key={index}
-          ref={(el) => { inputRefs.current[index] = el; }}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={otp[index]}
-          onChange={(e) => handleChange(e, index)}
-          onClick={() => handleClick(index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          className="w-12 h-14 bg-slate-900/50 border-2 border-slate-700 rounded-xl text-center text-2xl font-bold text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-        />
-      ))}
-    </div>
-  );
-};
-
-// --- Main Signup Page Component ---
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('')
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({
+
+  const { signup ,sendOtp,isSendingOtp,isSigningUp} = useAuthStore();
+
+  const [formData, setFormData] = useState<SignupPayload>({
     email: '',
     password: '',
-    confirmPassword: '',
     name: '',
     dob: '',
     gender: '',
@@ -301,7 +59,9 @@ export default function SignupPage() {
   const handleResend = () => {
     setCountdown(60);
     setCanResend(false);
-    console.log("Resending OTP...");
+    sendOtp({
+      email:formData.email
+    })
   };
 
   const validateStep = () => {
@@ -310,7 +70,7 @@ export default function SignupPage() {
     if (step === 1) {
       if (!formData.email) newErrors.email = "Email is required";
       if (!formData.password) newErrors.password = "Password is required";
-      if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+      if (formData.password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
       if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
     }
 
@@ -324,13 +84,19 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async() => {
     if (validateStep()) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setStep(step + 1);
-        setIsLoading(false);
-      }, 800);
+      if (step === 2) {
+        const res = await sendOtp({
+          email:formData.email
+        });
+
+        if(res === 200){
+          
+        }
+      }
+      setStep(step + 1);
+
     }
   };
 
@@ -339,11 +105,19 @@ export default function SignupPage() {
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log("Signup Complete:", formData);
-    setIsLoading(false);
-    alert("Account created successfully!");
+
+    const res = await signup(formData);
+    if (res === 201) {
+      setFormData({
+        email: '',
+        password: '',
+        name: '',
+        dob: '',
+        gender: '',
+        otp: ''
+      });
+      setConfirmPassword("");
+    }
   };
 
   const handleOtpComplete = (otp: string) => {
@@ -430,7 +204,7 @@ export default function SignupPage() {
             ))}
           </div>
         </motion.div> */}
-        <AuthMusiCard/>
+        <AuthMusiCard />
 
         {/* Right Side - Signup Form - Same size as LoginCard */}
         <motion.div
@@ -464,7 +238,7 @@ export default function SignupPage() {
               {/* Progress Bar */}
               <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                  className="h-full bg-linear-to-r from-indigo-500 to-purple-500"
                   initial={{ width: "0%" }}
                   animate={{ width: `${(step / 3) * 100}%` }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -505,8 +279,8 @@ export default function SignupPage() {
                         label="Confirm Password"
                         type="password"
                         icon={<Lock className="w-5 h-5" />}
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         error={errors.confirmPassword}
                       />
                     </div>
@@ -536,8 +310,8 @@ export default function SignupPage() {
                         <Calendar className="w-5 h-5" />
                       </div>
                       <Input
-                      // label="Date of birth"
-                      // icon={<User className="w-5 h-5" />}
+                        // label="Date of birth"
+                        // icon={<User className="w-5 h-5" />}
                         type="date"
                         className="w-full border border-slate-700 rounded-xl py-4 pl-10 pr-4 text-slate-100 focus:outline-none transition-all scheme-dark"
                         value={formData.dob}
@@ -636,10 +410,10 @@ export default function SignupPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleNext}
-                  disabled={isLoading}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all disabled:opacity-70"
+                  disabled={isSendingOtp}
+                  className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all disabled:opacity-70"
                 >
-                  {isLoading ? (
+                  {isSendingOtp ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
@@ -653,10 +427,10 @@ export default function SignupPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit}
-                  disabled={isLoading || formData.otp.length < 6}
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-green-500/25 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSigningUp || formData.otp.length < 6}
+                  className="bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-green-500/25 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
+                  {isSigningUp ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
@@ -744,3 +518,78 @@ export default function SignupPage() {
     </div>
   );
 }
+
+
+/**
+ * Input Field Component with Floating Label
+ */
+// interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+//   label: string;
+//   icon: React.ReactNode;
+//   error?: string;
+// }
+
+// const InputField = ({ label, icon, error, className, ...props }: InputFieldProps) => {
+//   const [isFocused, setIsFocused] = useState(false);
+//   const [hasValue, setHasValue] = useState(false);
+
+//   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+//     setIsFocused(true);
+//     props.onFocus?.(e);
+//   };
+
+//   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+//     setIsFocused(false);
+//     setHasValue(e.target.value.length > 0);
+//     props.onBlur?.(e);
+//   };
+
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     setHasValue(e.target.value.length > 0);
+//     props.onChange?.(e);
+//   };
+
+//   const isActive = isFocused || hasValue;
+
+//   return (
+//     <div className={cn("relative group", className)}>
+//       <div className={cn(
+//         "absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300",
+//         isActive ? "text-indigo-400" : "text-slate-500"
+//       )}>
+//         {icon}
+//       </div>
+
+//       <input
+//         {...props}
+//         className={cn(
+//           "w-full bg-slate-900/50 border border-slate-700 rounded-xl py-4 pl-10 pr-4 text-slate-100 placeholder-transparent focus:outline-none transition-all duration-300",
+//           "focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 focus:bg-slate-900/80",
+//           error && "border-red-500 focus:border-red-500 focus:ring-red-500/50"
+//         )}
+//         onFocus={handleFocus}
+//         onBlur={handleBlur}
+//         onChange={handleChange}
+//         placeholder={label}
+//       />
+
+//       <label
+//         className={cn(
+//           "absolute left-10 transition-all duration-300 pointer-events-none origin-left",
+//           isActive
+//             ? "-top-2.5 text-xs text-indigo-400 bg-slate-950 px-1 rounded"
+//             : "top-1/2 -translate-y-1/2 text-slate-500 text-base"
+//         )}
+//       >
+//         {label}
+//       </label>
+
+//       <motion.div
+//         className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-indigo-500 to-purple-500"
+//         initial={{ width: "0%" }}
+//         animate={{ width: isFocused ? "100%" : "0%" }}
+//         transition={{ duration: 0.3 }}
+//       />
+//     </div>
+//   );
+// };

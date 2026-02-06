@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Mail, Lock, ArrowRight, } from 'lucide-react';
 import { motion} from 'framer-motion';
 
@@ -6,35 +6,41 @@ import { BackgroundOrbs } from "@/components/BackgroundOrbs";
 import { InputField } from "@/components/InputField";
 import { useNavigate } from "react-router-dom";
 import AuthMusiCard from "@/components/AuthMusiCard";
+import { useAuthStore } from "@/store/auth/auth.store";
+import type { LoginPayload } from "@/types/auth.types";
 
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loginForm, setLoginForm] = useState<LoginPayload>({
+    email:'',
+    password:''
+  })
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const {login,isLoggingIn} = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!email || !password) {
+    if (!loginForm.email || !loginForm.password) {
       setError('Please fill in all fields');
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log('Login attempt:', { email, password });
-    setIsLoading(false);
-
-
-    // Here you would typically redirect or handle auth state
+     const res = await login(loginForm);
+     
+     if(res === 200){
+      setLoginForm({
+        email:'',
+        password:''
+      })
+     }
   };
+  const SetFormData = (e: ChangeEvent<HTMLInputElement>)=>{
+    setLoginForm((prev)=>({...prev,[e.target.name]:e.target.value}))
+  }
 
   const handleSignupPageRedirect = ()=>{
     navigate("/signup")
@@ -65,21 +71,23 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <InputField 
                 label="Email Address"
+                name="email"
                 type="email"
                 icon={<Mail className="w-5 h-5" />}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={error && !email ? error : undefined}
+                value={loginForm.email}
+                onChange={SetFormData}
+                error={error && !loginForm.email ? error : undefined}
               />
 
               <div className="space-y-2">
                 <InputField 
                   label="Password"
+                  name="password"
                   type="password"
                   icon={<Lock className="w-5 h-5" />}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  error={error && !password ? error : undefined}
+                  value={loginForm.password}
+                  onChange={SetFormData}
+                  error={error && !loginForm.password ? error : undefined}
                 />
                 <div className="flex justify-end">
                   <a href="#" className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
@@ -91,10 +99,10 @@ export default function LoginPage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
+                disabled={isLoggingIn}
                 className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {isLoggingIn ? (
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

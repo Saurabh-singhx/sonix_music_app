@@ -9,6 +9,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import userRoutes from "./modules/user/user.routes.js"
 import redisClient from "./config/redis.js";
+import publicRoutes from "./modules/public/public.routes.js"
 // import "./cron/updateTrending.js"
 // import "./cron/updateRecommendations.cron.js"
 
@@ -34,7 +35,8 @@ app.use(
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/user",userRoutes)
+app.use("/api/v1/user",userRoutes);
+app.use("/api/v1/public",publicRoutes);
 
 
 const startServer = async (): Promise<void> => {

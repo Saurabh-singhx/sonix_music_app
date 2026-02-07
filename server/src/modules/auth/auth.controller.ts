@@ -69,6 +69,7 @@ export const signup = async (req: Request<{}, {}, SignupBody>, res: Response) =>
                 user_password: hashedPassword,
                 gender,
                 date_of_birth: dob ? new Date(dob) : null,
+                last_login: new Date(Date.now())
             },
             select: {
                 user_id: true,
@@ -219,7 +220,7 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
     try {
-        res.cookie("jwtAuth", "", { maxAge: 0 })
+        res.cookie("jwtauth", "", { maxAge: 0 })
 
         return res.status(200).json({ message: "logged out successfully" })
     } catch (error) {
@@ -274,3 +275,23 @@ export const checkAuth = async (req: Request, res: Response) => {
 //   }
 // };
 
+export const createGuest = (req: Request, res: Response) => {
+
+    try {
+
+        //will add features in future
+        res.status(201).json({
+            message: "guest account created", userData: {
+                user_id:"guest123",
+                role: "guest",
+                user_email: "guest@gmail.com",
+                user_name: "guest-_-",
+                user_profile_pic: "",
+                date_of_birth: new Date(Date.now()),
+                gender: "unknown"
+            }
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}

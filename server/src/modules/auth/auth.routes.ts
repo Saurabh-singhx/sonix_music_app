@@ -7,6 +7,7 @@ import passport from 'passport';
 import { checkEmailValidation } from './validators/email.validators.js';
 import { checkAuth, login, logout, otpSend, signup } from './auth.controller.js';
 import { checkAuthLimiter, loginLimiter, logOutLimiter, otpLimiter, signupLimiter } from '../../middleware/ratelimit.js';
+import { switchToAdmin } from '../admin/admin.controller.js';
 
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.post("/logout",logOutLimiter,protectRoute,logout);
 // router.get("/google",passport.authenticate("google", { scope: ["profile", "email"],session: false }));
 // router.get("/google/callback",passport.authenticate("google", { failureMessage: true, session: false }),googleAuth);
 router.get("/checkauth",checkAuthLimiter, protectRoute,checkAuth);
+router.post("/change-admin",protectRoute,switchToAdmin);
 
 export default router;

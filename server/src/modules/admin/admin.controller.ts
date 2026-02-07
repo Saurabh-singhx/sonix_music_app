@@ -5,59 +5,59 @@ import { authUser } from "../../types/request/auth.js";
 import { artistBody, getSongUploadUrlBody, getUserProfileImgUploadUrl } from "../../types/request/admin.types.js";
 import { songBody } from "../../types/request/song.types.js";
 
-// export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, res : Response) => {
+export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, res : Response) => {
 
-//     const { secret_key }  = req.body;
-//     const email = req.user.user_email;
-//     try {
-//         if (!secret_key) {
-//             return res.status(400).json({ message: "fill all feilds" })
-//         }
+    const { secret_key }  = req.body;
+    const user = req.user as authUser ;
+    try {
+        if (!secret_key) {
+            return res.status(400).json({ message: "fill all feilds" })
+        }
 
-//         const stored_key = process.env.ADMIN_SECRET_KEY;
+        const stored_key = process.env.ADMIN_SECRET_KEY;
 
-//         if (stored_key !== secret_key) {
-//             return res.status(400).json({ message: "invalid key" });
-//         }
+        if (stored_key !== secret_key) {
+            return res.status(400).json({ message: "invalid key" });
+        }
 
-//         const newUser = await prisma.user.update({
-//             where: {
-//                 user_email: email
-//             },
-//             data: {
-//                 role: "ADMIN",
-//             },
+        const newUser = await prisma.user.update({
+            where: {
+                user_email: user.user_email
+            },
+            data: {
+                role: "ADMIN",
+            },
 
-//             select: {
-//                 user_id: true,
-//                 user_email: true,
-//                 user_name: true,
-//                 user_profile_pic: true,
-//                 gender: true,
-//                 date_of_birth: true,
-//                 role: true
-//             }
-//         })
+            select: {
+                user_id: true,
+                user_email: true,
+                user_name: true,
+                user_profile_pic: true,
+                gender: true,
+                date_of_birth: true,
+                role: true
+            }
+        })
 
-//         return res.status(200).json({ message: "successfull" ,newUser})
-//     } catch (error) {
-//         console.log("error in signup controller", error.message);
-//         return res.status(500).json({ message: "Internal server error" })
-//     }
-// }
+        return res.status(200).json({ message: "successfull" ,newUser})
+    } catch (error) {
+        console.log("error in signup controller", error);
+        return res.status(500).json({ message: "Internal server error" })
+    }
+}
 
-// export const uploadSong = (req: Request, res: Response) => {
+export const uploadSong = (req: Request, res: Response) => {
 
-//     const user = req.user;
+    const user = req.user;
 
-//     try {
-//         return res.status(200).json({ message: "everything ok ", user })
-//     } catch (error) {
-//         const err = error as Error;
-//         console.log("error in signup controller", err.message);
-//         return res.status(500).json({ message: "Internal server error" })
-//     }
-// }
+    try {
+        return res.status(200).json({ message: "everything ok ", user })
+    } catch (error) {
+        const err = error as Error;
+        console.log("error in signup controller", err.message);
+        return res.status(500).json({ message: "Internal server error" })
+    }
+}
 
 
 export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, res: Response) => {

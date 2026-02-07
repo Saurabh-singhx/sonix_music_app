@@ -284,3 +284,47 @@ export const getArtistsLimiter = rateLimit({
   },
 
 });
+
+// public limiters ==----==>
+
+export const publicLimiterAllRoutes = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 20, //fix here --------------------<<<
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:public:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 24 hour."
+    });
+  },
+
+});
+
+export const guestCreateLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 100, //fix here --------------------<<<
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:createguest:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 24 hour."
+    });
+  },
+
+});

@@ -4,8 +4,9 @@ import prisma from "../../lib/prisma.js";
 import redisClient from "../../config/redis.js";
 import nodemailer from "nodemailer"
 import { Request, Response } from "express";
-import { LoginBody, SignupBody } from "../../types/request/auth.js";
+import { authUser, LoginBody, SignupBody } from "../../types/request/auth.js";
 import { StoredOtp } from "../../types/redis/otp.js";
+import { error } from "node:console";
 
 export const signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
 
@@ -246,34 +247,33 @@ export const checkAuth = async (req: Request, res: Response) => {
 }
 
 
-// export const googleAuth = async (req: Request, res: Response) => {
+export const googleAuth = async (req: Request, res: Response) => {
 
-//     const user= req;
+    const user = req.user as authUser;
 
-//   try {
+    try {
 
-//     if (!user) {
-//       throw new Error("No user in request");
-//     }
+        if (!req.user) {
+            return res.redirect(`${process.env.FRONTEND_URL}/login`);
+        }
 
-//     generateToken(user.user_id, res);
+        if (!process.env.FRONTEND_URL) {
+            throw new Error("FRONTEND_URL not found")
+        }
 
-//     const redirectUrl =
-//       process.env.NODE_ENV === "development"
-//         ? "http://localhost:5173"
-//         : "";
+        generateToken(user.user_id, res);
 
-//     res.redirect(redirectUrl);
-//   } catch (error) {
-//     console.error("Error in Google signup", error);
+        const redirectUrl = process.env.FRONTEND_URL;
 
-//     res.redirect(
-//       process.env.NODE_ENV === "development"
-//         ? "http://localhost:5173/login?error=oauth_failed"
-//         : ""
-//     );
-//   }
-// };
+        res.redirect(redirectUrl);
+    } catch (error) {
+        console.error("Error in Google signup", error);
+
+        res.redirect(
+            `${process.env.FRONTEND_URL!}/login`
+        );
+    }
+};
 
 export const createGuest = (req: Request, res: Response) => {
 
@@ -282,7 +282,7 @@ export const createGuest = (req: Request, res: Response) => {
         //will add features in future
         res.status(201).json({
             message: "guest account created", userData: {
-                user_id:"guest123",
+                user_id: "guest123",
                 role: "guest",
                 user_email: "guest@gmail.com",
                 user_name: "guest-_-",

@@ -59,6 +59,25 @@ export const signupLimiter = rateLimit({
   },
 });
 
+export const googleAuthLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:googleAuth:",
+  }),
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 1 hour."
+    });
+  },
+});
+
 // otp rate limit  5 request / 10 minutes
 
 export const otpLimiter = rateLimit({
@@ -289,7 +308,7 @@ export const getArtistsLimiter = rateLimit({
 
 export const publicLimiterAllRoutes = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
-  max: 20, //fix here --------------------<<<
+  max: 100, //fix here --------------------<<<
   standardHeaders: true,
   legacyHeaders: false,
 
@@ -310,7 +329,7 @@ export const publicLimiterAllRoutes = rateLimit({
 
 export const guestCreateLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
-  max: 100, //fix here --------------------<<<
+  max: 5, //fix here --------------------<<<
   standardHeaders: true,
   legacyHeaders: false,
 

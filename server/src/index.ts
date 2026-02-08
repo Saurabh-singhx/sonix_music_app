@@ -13,7 +13,7 @@ import publicRoutes from "./modules/public/public.routes.js"
 // import "./cron/updateTrending.js"
 // import "./cron/updateRecommendations.cron.js"
 
-// import passport from "./config/passport.js";
+import "./config/passport.js"
 import { Server } from "http";
 
 const app: Application = express();

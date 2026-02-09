@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import AuthMusiCard from '@/components/AuthMusiCard';
+import AuthMusiCard from '@/components/AuthMusiCardAnimate';
 import { BackgroundOrbs } from '@/components/BackgroundOrbs';
 import { InputField } from '@/components/InputField';
 import { GenderCard } from '@/components/GenderCard';
@@ -31,7 +31,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const navigate = useNavigate()
 
-  const { signup ,sendOtp,isSendingOtp,isSigningUp} = useAuthStore();
+  const { signup ,sendOtp,isSendingOtp,isSigningUp,constinueAsGuest,isCreatingGuest} = useAuthStore();
 
   const [formData, setFormData] = useState<SignupPayload>({
     email: '',
@@ -124,14 +124,16 @@ export default function SignupPage() {
     setFormData({ ...formData, otp });
   };
 
-  const handleGuestLogin = () => {
-    console.log("Continuing as guest...");
-    alert("Continuing as guest!");
+  const handleGuestLogin = async() => {
+    const res = await constinueAsGuest();
+    if(res === 429){
+      //add create account card
+    }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Signing up with ${provider}...`);
-  };
+  const handleGoogleLogin = async()=>{
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/google`;
+  }
 
   // Properly typed variants
   const containerVariants: Variants = {
@@ -454,12 +456,11 @@ export default function SignupPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <motion.button
+                <motion.button
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSocialLogin('google')}
-                    className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors"
+                    onClick={handleGoogleLogin}
+                    className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors w-full cursor-pointer"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -469,24 +470,12 @@ export default function SignupPage() {
                     </svg>
                     <span className="text-sm font-medium">Google</span>
                   </motion.button>
-                  <motion.button
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSocialLogin('apple')}
-                    className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-1.2 3.68-1.01 1.25.16 2.18.73 2.89 1.66-2.6 1.55-2.14 5.98.22 7.13-.57 1.5-1.31 2.99-2.87 4.45zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-                    </svg>
-                    <span className="text-sm font-medium">Apple</span>
-                  </motion.button>
-                </div>
 
                 <motion.button
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleGuestLogin}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-colors text-slate-400 hover:text-slate-200"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   <UserCircle className="w-5 h-5" />
                   <span className="text-sm font-medium">Continue as Guest</span>

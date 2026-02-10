@@ -16,7 +16,7 @@ export interface artistGetUrlPayload {
     fileType: string;
     fileSize: number;
     userId: string | undefined;
-    imageType: string;
+    imageType: "profile" | "gallery" | "cover";
 }
 
 export interface songGetUrlPayload {
@@ -60,6 +60,7 @@ export interface AdminStoreT {
     getSongUploadUrl: (data: songGetUrlPayload) => Promise<void>;
     songDataUpdate:(data:songDataUpdatePayload,song:File,image:File) => Promise<void>;
     getArtists:() => Promise<void>;
+    cleanAfterLogOut:()=>void;
 }
 
 

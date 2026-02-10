@@ -204,6 +204,16 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
             console.error(error);
             toast.error("error while getting artists data");
         }
+    },
+
+    cleanAfterLogOut:()=>{
+        set({uploadUrl:""});
+        set({createdArtistData:null});
+        set({imageUrlKey:""});
+        set({songuploadUrl:""});
+        set({songUrlKey:""});
+        set({imageUrlKey:""});
+        set({artists:[]});
     }
 
 }));

@@ -14,11 +14,31 @@ export interface LoginPayload {
     password: string
 }
 
-export interface AuthStoreT {
-    authUser: user | null,
-    isLoggingIn: boolean,
+export interface SignupPayload {
+    email: string;
+    password: string;
+    name: string;
+    gender: string;
+    otp: string;
+    dob: string;
+}
 
-    login: (data: LoginPayload) => Promise<void>;
+export interface otpPayload{
+    email:string
+}
+
+export interface AuthStoreT {
+    authUser: user | null;
+    isLoggingIn: boolean;
+    isLoggingOut: boolean;
+    isSigningUp:boolean;
+    isSendingOtp:boolean;
+    isCreatingGuest:boolean;
+
+    login: (data: LoginPayload) => Promise<number | undefined>;
     checkAuth: () => Promise<void>;
     logout: () => Promise<void>;
+    signup: (data:SignupPayload) => Promise<number | undefined>;
+    sendOtp: (data:otpPayload) => Promise<number | undefined>;
+    constinueAsGuest: () => Promise<number | undefined>;
 }

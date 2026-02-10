@@ -6,6 +6,7 @@ export interface song{
     artist:artist,
     cover_image_url:string,
     release_date:string,
+    duration:number
 }
 
 interface artist{
@@ -16,9 +17,12 @@ interface artist{
 }
 
 export interface userStoreT {
-    recentSongs:  song[],
-    isGettingSongs: boolean,
-    nextCursor:string|null,
+    recentSongs:  song[];
+    isGettingSongs: boolean;
+    nextCursor:string|null;
+    trendingSongs:song[];
+    recommendedSongs:song[];
+    recentlyPlayedSongs:song[];
 
     getRecentSongs: (limit:number | null,cursor:string | null) => Promise<void>;
 

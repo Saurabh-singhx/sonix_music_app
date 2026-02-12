@@ -8,19 +8,23 @@ export async function createUploadUrl(
   fileName: string,
   fileType: string
 ) {
-  const key = `songs/${userId}/${Date.now()}-${fileName}`;
+  try {
+    const key = `songs/${userId}/${Date.now()}-${fileName}`;
 
-  const command = new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME!,
-    Key: key,
-    ContentType: fileType,
-  });
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: key,
+      ContentType: fileType,
+    });
 
-  const uploadUrl = await getSignedUrl(s3, command, {
-    expiresIn: 300,
-  });
+    const uploadUrl = await getSignedUrl(s3, command, {
+      expiresIn: 300,
+    });
 
-  return { uploadUrl, key };
+    return { uploadUrl, key };
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 
@@ -31,42 +35,50 @@ export async function createImageUploadUrl(
   refId?: string
 ) {
 
-  let key: string;
+  try {
+    let key: string;
 
-  if (imageType === "profile") {
-    key = `users/${userId}/profile.jpg`;
+    if (imageType === "profile") {
+      key = `users/${userId}/profile.jpg`;
 
-  } else if (imageType === "gallery") {
-    key = `users/${userId}/gallery/${crypto.randomUUID()}.jpg`;
+    } else if (imageType === "gallery") {
+      key = `users/${userId}/gallery/${crypto.randomUUID()}.jpg`;
 
-  } else {
-    if (!refId) throw new Error("refId (songId) required");
-    key = `songs/${refId}/cover.jpg`;
+    } else {
+      if (!refId) throw new Error("refId (songId) required");
+      key = `songs/${refId}/cover.jpg`;
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: key,
+      ContentType: fileType,
+    });
+
+    const uploadUrl = await getSignedUrl(s3, command, {
+      expiresIn: 300,
+    });
+
+    return { uploadUrl, key };
+  } catch (error) {
+    console.log(error)
   }
-
-  const command = new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME!,
-    Key: key,
-    ContentType: fileType,
-  });
-
-  const uploadUrl = await getSignedUrl(s3, command, {
-    expiresIn: 300,
-  });
-
-  return { uploadUrl, key };
 }
 
 
 export async function getFileUrl(s3Key: string) {
-  
-  const command = new GetObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME!,
-    Key: s3Key,
-  });
 
-  return getSignedUrl(s3, command, {
-    expiresIn: 60 * 10, // 10 min
-  });
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: s3Key,
+    });
+
+    return getSignedUrl(s3, command, {
+      expiresIn: 60 * 10, // 10 min
+    });
+  } catch (error) {
+    console.log(error)
+  }
 }
 

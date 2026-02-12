@@ -160,7 +160,6 @@ export const checkAuthLimiter = rateLimit({
 
 // Admin rate limit form here ==----==>
 
-
 export const getUploadSongUrlLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 300,
@@ -367,6 +366,218 @@ export const healthCheckLimiter = rateLimit({
   handler: (_req, res) => {
     res.status(429).json({
       message: "Too many requests. Try again after 1 minute."
+    });
+  },
+
+});
+
+//user rate limiter ==----==>
+
+export const getAllRecentSongsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getAllRecentSongs:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getRecommendedSongsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getRecommendedSongs:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getTrendingSongsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getTrendingSongs:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const createplaylistLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:createplaylist:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getmyplaylistsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getmyplaylists:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getpublicplaylistsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getpublicplaylists:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getallplaylistsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getallplaylists:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getplaylistsongsLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getplaylistsongs:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getartistsByUserLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getartistsByUser:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
+    });
+  },
+
+});
+
+export const getArtistsSongsByUserLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:getArtistsSongsByUser:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 5 minute."
     });
   },
 

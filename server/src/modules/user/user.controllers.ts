@@ -4,7 +4,7 @@ import { authUser } from "../../types/request/auth.js";
 import { getFileUrl } from "../../services/s3.services.js";
 import { plalistDetails } from "../../types/request/user.types.js";
 
-export const getAllSongs = async (req: Request, res: Response) => {
+export const getAllRecentSongs = async (req: Request, res: Response) => {
   try {
     const limit = Number(req.query.limit) || 10;
     const cursor = req.query.cursor as string | undefined;

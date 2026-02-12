@@ -10,6 +10,7 @@ import adminRoutes from "./modules/admin/admin.routes.js";
 import userRoutes from "./modules/user/user.routes.js"
 import redisClient from "./config/redis.js";
 import publicRoutes from "./modules/public/public.routes.js"
+import healthCheckRoute from "./modules/health/health.routes.js"
 // import "./cron/updateTrending.js"
 // import "./cron/updateRecommendations.cron.js"
 
@@ -28,7 +29,7 @@ app.set('trust proxy', 1); // '1' is the number of proxies between the user and 
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -37,6 +38,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/user",userRoutes);
 app.use("/api/v1/public",publicRoutes);
+app.use(healthCheckRoute);
 
 
 const startServer = async (): Promise<void> => {

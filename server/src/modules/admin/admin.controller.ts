@@ -46,19 +46,6 @@ export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, r
     }
 }
 
-export const uploadSong = (req: Request, res: Response) => {
-
-    const user = req.user;
-
-    try {
-        return res.status(200).json({ message: "everything ok ", user })
-    } catch (error) {
-        const err = error as Error;
-        console.log("error in signup controller", err.message);
-        return res.status(500).json({ message: "Internal server error" })
-    }
-}
-
 
 export const getUploadUrl = async (req: Request<{}, {}, getSongUploadUrlBody>, res: Response) => {
     const { fileName, fileType, fileSize } = req.body;

@@ -347,3 +347,27 @@ export const guestCreateLimiter = rateLimit({
   },
 
 });
+
+
+//health check ==-----==>
+
+export const healthCheckLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30, 
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:healthcheck:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 1 minute."
+    });
+  },
+
+});

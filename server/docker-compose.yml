@@ -10,30 +10,9 @@ services:
     env_file:
       - .env
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - app-network
-
-  postgres:
-    image: postgres:16-alpine
-    # container_name: postgres_db
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     networks:
       - app-network
 
@@ -58,14 +37,10 @@ services:
     command: npx prisma migrate deploy
     env_file:
       - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - app-network
 
 volumes:
-  pgdata:
   redisdata:
 
 networks:

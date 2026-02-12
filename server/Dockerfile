@@ -27,8 +27,11 @@ RUN npm ci --omit=dev
 
 # Copy build artifacts and Prisma configuration
 COPY --from=builder /app/dist ./dist
+
 COPY prisma ./prisma
 COPY prisma.config.ts ./
+
+RUN npx prisma generate
 
 # Ensure the 'node' user owns the app directory
 RUN chown -R node:node /app

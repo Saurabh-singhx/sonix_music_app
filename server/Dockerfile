@@ -6,13 +6,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy Prisma files first to generate the client
-COPY prisma ./prisma/
-COPY prisma.config.ts ./
+COPY . .
 
 RUN npx prisma generate
 
-COPY . .
 RUN npm run build
 
 # -------- RUNTIME STAGE --------
@@ -31,7 +28,6 @@ COPY --from=builder /app/dist ./dist
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 
-RUN npx prisma generate
 
 # Ensure the 'node' user owns the app directory
 RUN chown -R node:node /app

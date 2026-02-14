@@ -1,9 +1,7 @@
 
 services:
   api:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: saurabhxkumarx/sonix-music-app:latest
     container_name: api
     ports:
       - "3000:3000"
@@ -35,9 +33,7 @@ services:
       - app-network
 
   migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: saurabhxkumarx/sonix-music-app:latest
     command: npx prisma migrate deploy
     env_file:
       - .env

@@ -39,16 +39,15 @@ export async function createImageUploadUrl(
     let key: string;
 
     if (imageType === "profile") {
-      key = `users/${userId}/profile.jpg`;
+      key = `users/${userId}/profile/profile${Date.now()}.jpg`;
 
     } else if (imageType === "gallery") {
-      key = `users/${userId}/gallery/${crypto.randomUUID()}.jpg`;
+      key = `users/${userId}/gallery/gallery${Date.now()}.jpg`;
 
     } else {
       if (!refId) throw new Error("refId (songId) required");
-      key = `songs/${refId}/cover.jpg`;
+      key = `songs/${refId}/cover/cover${Date.now()}.jpg`;
     }
-
     const command = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME!,
       Key: key,

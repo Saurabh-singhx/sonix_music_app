@@ -21,7 +21,6 @@ const app: Application = express();
 
 const PORT: number = Number(process.env.PORT) || 4000;
 
-// app.use(passport.initialize());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(cookieParser());

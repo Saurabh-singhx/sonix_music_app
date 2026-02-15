@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { AdminStoreT } from "../../types/admin.types";
 import { axiosInstance } from "../../lib/axios";
 import { toast } from "react-toastify";
-import axios, { type AxiosProgressEvent } from "axios";
+import axios, { AxiosError, type AxiosProgressEvent } from "axios";
 
 
 export const useAdminStore = create<AdminStoreT>((set, get) => ({
@@ -18,22 +18,23 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
     songUrlKey: "",
     songUploadProgress: 0,
     isUploadingSong: false,
-    artists:[],
+    artists: [],
 
     getImageUploadUrl: async (data) => {
         set({ isGettingUrloadImageUrl: true });
         try {
             const res = await axiosInstance.post("/api/v1/admin/getimageurl", data);
-            console.log(data);
 
             set({ imageUrlKey: res.data.result?.key });
             set({ uploadUrl: res.data.result?.uploadUrl });
-            console.log(res.data.result.uploadUrl)
 
         } catch (error) {
-            console.log(data);
-            console.error(error);
-            toast.error("error while getting imageurl");
+            let errorMessage: string = "error while fetching uploaadurl"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
         } finally {
             set({ isGettingUrloadImageUrl: false });
         }
@@ -48,9 +49,13 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
                 toast.success('artist created successfully 💁')
             }
 
-        } catch (error: unknown) {
-            console.error(error);
-            toast.error("error while creating artist");
+        } catch (error) {
+            let errorMessage: string = "failed to create artist"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
         } finally {
             set({ isCreatingArtist: false })
         }
@@ -91,10 +96,14 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
             });
 
             toast.success("Image uploaded successfully");
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            let errorMessage: string = "error while uploading image"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
             set({ uploadProgress: 0 });
-            toast.error("Image upload failed");
         } finally {
             set({ isUploadingImage: false });
             set({ uploadUrl: "" });
@@ -115,9 +124,12 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
             console.log(res.data.result?.key)
 
         } catch (error) {
-            console.log(data);
-            console.error(error);
-            toast.error("error while getting song url");
+             let errorMessage: string = "error while fetching song upload url"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
         }
     },
 
@@ -179,11 +191,14 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
 
 
         } catch (error) {
-            console.log(data);
-            console.error(error);
+             let errorMessage: string = "error while updating song details"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
             set({ uploadProgress: 0 })
             set({ songUploadProgress: 0 })
-            toast.error("error while uploading song");
         } finally {
             set({ isUploadingSong: false });
             set({ uploadUrl: "" });
@@ -195,25 +210,29 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
         }
     },
 
-    getArtists:async()=>{
+    getArtists: async () => {
         try {
             const res = await axiosInstance.get("/api/v1/admin/getartists");
 
-           set({ artists: res.data.artists });
+            set({ artists: res.data.artists });
         } catch (error) {
-            console.error(error);
-            toast.error("error while getting artists data");
+             let errorMessage: string = "error while fetching artists"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
         }
     },
 
-    cleanAfterLogOut:()=>{
-        set({uploadUrl:""});
-        set({createdArtistData:null});
-        set({imageUrlKey:""});
-        set({songuploadUrl:""});
-        set({songUrlKey:""});
-        set({imageUrlKey:""});
-        set({artists:[]});
+    cleanAfterLogOut: () => {
+        set({ uploadUrl: "" });
+        set({ createdArtistData: null });
+        set({ imageUrlKey: "" });
+        set({ songuploadUrl: "" });
+        set({ songUrlKey: "" });
+        set({ imageUrlKey: "" });
+        set({ artists: [] });
     }
 
 }));

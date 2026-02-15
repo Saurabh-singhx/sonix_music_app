@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { axiosInstance } from "../../lib/axios";
 import type { userStoreT } from "@/types/user.types";
 import { useAuthStore } from "../auth/auth.store";
+import { AxiosError } from "axios";
+import { toast } from "react-toastify";
 
 export const useUserStore = create<userStoreT>((set, get) => ({
 
@@ -33,7 +35,7 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
                 console.log(res.data.songs)
             } else {
-                const res = await axiosInstance.get("/api/v1/user/songs",
+                const res = await axiosInstance.get("/api/v1/user/recent-songs",
                     {
                         params: {
                             limit: limit,
@@ -44,14 +46,16 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
             }
-            // console.log(res.data.songs[0])
         } catch (error) {
-            console.error(error);
-            console.log("error in getrecentsongs")
+            let errorMessage: string = "error while getting recent added songs"
+                       if (error instanceof AxiosError) {
+                           errorMessage =
+                               error.response?.data?.message ?? error.message;
+                       }
+                       toast.error(errorMessage)
         } finally {
             set({ isGettingSongs: false })
         }
     }
-
 
 }));

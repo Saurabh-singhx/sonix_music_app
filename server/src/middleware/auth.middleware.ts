@@ -9,21 +9,11 @@ export const validate = (req: Request, res: Response, next: NextFunction): void 
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    const formattedErrors: Record<string, string> = {};
-
-    for (const err of errors.array()) {
-      if ("path" in err) {
-        const fieldError = err as FieldValidationError;
-
-        if (!formattedErrors[fieldError.path]) {
-          formattedErrors[fieldError.path] = fieldError.msg;
-        }
-      }
-    }
+    const firstError = errors.array()[0];
 
     res.status(400).json({
       success: false,
-      formattedErrors,
+      message: firstError?.msg,
     });
 
     return;
@@ -183,9 +173,9 @@ export const protectAdminRoute = async (req: Request, res: Response, next: NextF
         return res.status(401).json({ message: "User not found" });
       }
 
-       if(user.role !== 'ADMIN'){ //fix create admin table to store user ids
-          return res.status(401).json({message:"unauthorize user"})
-        }
+      if (user.role !== 'ADMIN') { //fix create admin table to store user ids
+        return res.status(401).json({ message: "unauthorize user" })
+      }
 
       const date = user.date_of_birth?.toISOString();
       const key = `userData:${decoded.userId}`;
@@ -209,8 +199,8 @@ export const protectAdminRoute = async (req: Request, res: Response, next: NextF
       const redisUserdata: authUser = JSON.parse(rediUser)
       if (redisUserdata.user_id === decoded.userId) {
 
-        if(redisUserdata.role !== 'ADMIN'){//fix create admin table to store user ids
-          return res.status(401).json({message:"unauthorize user"})
+        if (redisUserdata.role !== 'ADMIN') {//fix create admin table to store user ids
+          return res.status(401).json({ message: "unauthorize user" })
         }
 
         (req as AuthenticatedRequest).user = {

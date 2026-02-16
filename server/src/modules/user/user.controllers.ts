@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import prisma from "../../lib/prisma.js";
 import { authUser } from "../../types/request/auth.js";
 import { getFileUrl } from "../../services/s3.services.js";
-import { plalistDetails } from "../../types/request/user.types.js";
+import { plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
+import redisClient from "../../config/redis.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
   try {
@@ -102,7 +103,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
       },
 
       select: {
-        id:true,
+        id: true,
         score: true,
         song: {
           select: {
@@ -126,7 +127,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
 
     });
 
-      let nextCursor: string | null = null;
+    let nextCursor: string | null = null;
 
     if (recommendedSongs.length > limit) {
       const nextItem = recommendedSongs.pop();
@@ -138,7 +139,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
       nextCursor,
     });
   } catch (error) {
-     console.error(error);
+    console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -441,5 +442,82 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
+}
+
+export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>, res: Response) => {
+
+  const { songId, duration } = req.body;
+  const user = req.user as authUser;
+
+  const PlayedDuration = Math.floor(duration)
+  try {
+
+
+    const checkInRedis = await redisClient.get(`${user.user_id}:${songId}`);
+
+    if (checkInRedis) {
+
+      await prisma.userSongEvent.create({
+        data: {
+          song_id: songId,
+          event_type: "REPEAT",
+          user_id: user.user_id,
+          play_duration: PlayedDuration
+        }
+      });
+      return res.sendStatus(204);
+    }
+
+     const song = await prisma.song.findUnique({
+      where: {
+        song_id: songId
+      },
+      select: {
+        song_id: true
+      }
+    });
+
+        if (!song?.song_id) {
+      return res.status(400).json({ message: "song not found" })
+    }
+
+    if (PlayedDuration <= 20) {
+      await prisma.userSongEvent.create({
+        data: {
+          song_id: songId,
+          user_id: user.user_id,
+          event_type: "SKIP",
+          play_duration: PlayedDuration
+        }
+      })
+    } else if (PlayedDuration >= 80) {
+
+      await prisma.userSongEvent.create({
+        data: {
+          song_id: songId,
+          event_type: "COMPLETE",
+          user_id: user.user_id,
+          play_duration: PlayedDuration
+        }
+      });
+    } else {
+      await prisma.userSongEvent.create({
+        data: {
+          song_id: song.song_id,
+          user_id: user.user_id,
+          event_type: "PLAY",
+          play_duration: PlayedDuration
+        }
+      });
+    }
+
+    await redisClient.set(`${user.user_id}:${song.song_id}`, 1, { expiration: { type: "EX", value: 50 } })
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.error("error in songeventtype", error)
+    return res.sendStatus(500);
+  }
+
 }
 

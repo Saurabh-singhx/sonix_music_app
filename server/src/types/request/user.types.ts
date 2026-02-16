@@ -3,3 +3,8 @@ export interface plalistDetails {
     description:string,
     isPublic:boolean
 }
+
+export interface userSongEventPayload{
+    songId:string,
+    duration:number
+}

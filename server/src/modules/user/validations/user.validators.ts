@@ -29,3 +29,18 @@ export const getPlaylistsSongsValidator = [
     .notEmpty().withMessage("playlistId cannot be empty"),
 ];
 
+
+export const validateSongEvent = [
+  body("songId")
+    .exists().withMessage("songId is required")
+    .bail()
+    .isUUID().withMessage("songId must be a valid UUID"),
+
+  body("duration")
+    .exists().withMessage("duration is required")
+    .bail()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage("duration must be a number between 0 and 100"),
+];
+
+

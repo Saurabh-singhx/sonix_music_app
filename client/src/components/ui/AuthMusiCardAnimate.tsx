@@ -1,6 +1,6 @@
 import {motion} from "framer-motion"
 import { Disc } from 'lucide-react'
-import { VisualizerBar } from './ui/VisualizerBar'
+import { VisualizerBar } from "./VisualizerBar"
 
 function AuthMusiCard() {
   return (

@@ -1,67 +1,88 @@
-import React from 'react';
-import { Sparkles, Play, Pause } from 'lucide-react';
-import type { song } from '@/types/user.types';
+import { usePlayerStore } from "@/store/player/player.store";
+import { useUserStore } from "@/store/user/user.store";
+import { motion } from "framer-motion";
+import { ChevronLeft, Heart, MoreHorizontal, Play } from "lucide-react";
+import { useRef } from "react";
 
-interface RecommendedSectionProps {
-  tracks: song[];
-  currentTrackIndex: number | null;
-  isPlaying: boolean;
-  onTrackSelect: (index: number) => void;
-}
 
-export const RecommendedSection: React.FC<RecommendedSectionProps> = ({
-  tracks,
-  currentTrackIndex,
-  isPlaying,
-  onTrackSelect,
-}) => {
-  // Use last tracks as "recommended" for demo
-  const recommendedTracks = tracks.slice(-6);
-
-  if (recommendedTracks.length === 0) return null;
-
+export const RecommendedSection = () => {
+  const { setCurrent } = usePlayerStore();
+  const { recommendedSongs } = useUserStore();
+  const scrollRef = useRef<HTMLDivElement>(null);
   return (
-    <section className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Recommended For You</h2>
+    <section className="mb-12 group/section">
+      <div className="flex items-center justify-between mb-6 pr-4">
+        <div className="flex items-center gap-2">
+          <Heart className="w-6 h-6 text-white" />
+          <h2 className="text-2xl font-bold tracking-tighter text-white">RECOMMENDED FOR YOU</h2>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
+            className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {recommendedTracks.map((track) => {
-          const originalIndex = tracks.findIndex(t => t.song_id === track.song_id);
-          const isActive = currentTrackIndex === originalIndex;
-          
-          return (
-            <button
-              key={track.song_id}
-              onClick={() => onTrackSelect(originalIndex)}
-              className={`group relative p-3 rounded-xl transition-all duration-300 text-left
-                ${isActive 
-                  ? 'bg-primary/20 ring-1 ring-primary' 
-                  : 'bg-card hover:bg-accent/50'
-                }`}
+
+      {
+        recommendedSongs?.length > 0 && (<div
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 scrollbar-hide snap-x"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {recommendedSongs.map((song, index) => (
+            <motion.div
+              key={`${song.song_id}-rec-${index}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="min-w-55 snap-start cursor-pointer group"
+              onClick={() => setCurrent(song)}
             >
-              <div className="aspect-square rounded-lg bg-linear-to-br from-purple-500/30 to-pink-500/30 mb-3 flex items-center justify-center overflow-hidden relative group">
-                <div className={`absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center`}>
-                  {isActive && isPlaying ? (
-                    <Pause className="w-8 h-8 text-white" />
-                  ) : (
-                    <Play className="w-8 h-8 text-white ml-1" />
-                  )}
+              <div className="relative aspect-square rounded-2xl overflow-hidden mb-4 shadow-lg bg-zinc-900">
+                <img
+                  src={song.cover_image_url}
+                  alt={song.song_title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
+                  <button className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center transform scale-50 group-hover:scale-100 transition-transform duration-300 delay-75 hover:scale-110">
+                    <Play className="w-6 h-6 fill-current ml-1" />
+                  </button>
+                  <button className="text-white hover:text-zinc-300 transition-colors">
+                    <MoreHorizontal className="w-6 h-6" />
+                  </button>
                 </div>
-                <span className="text-3xl font-bold text-primary/30">
-                  {track.song_title.charAt(0).toUpperCase()}
-                </span>
               </div>
-              <p className="font-medium text-sm truncate">{track.song_title}</p>
-              <p className="text-xs text-muted-foreground truncate">{track.artist.artist_name}</p>
-              {track.duration && (
-                <p className="text-xs text-muted-foreground/70 mt-1">{track.duration}</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
+              <h3 className="font-bold text-white truncate text-lg">{song?.song_title}</h3>
+              <p className="text-sm text-zinc-400 truncate">{song?.artist?.artist_name}</p>
+            </motion.div>
+          ))}
+        </div>)
+      }
+
+      {recommendedSongs.length === 0 && (
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="relative">
+            <div className="absolute inset-0 bg-pink-500/10 blur-3xl rounded-full" />
+            <div className="relative w-20 h-20 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+              <Heart className="w-10 h-10 text-zinc-500" />
+            </div>
+          </div>
+
+          <h3 className="text-2xl font-bold text-white mb-2">
+            No Recommendations Yet
+          </h3>
+
+          <p className="text-zinc-400 max-w-md">
+            Listen to more music and we’ll suggest tracks tailored just for you.
+          </p>
+        </div>
+      )}
+
     </section>
   );
 };

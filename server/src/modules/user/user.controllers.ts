@@ -379,9 +379,36 @@ export const getArtists = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: "asc"
       },
+      select: {
+        artist_id: true,
+        artist_bio: true,
+        artist_name: true,
+        artist_profilePic: true
+      }
     })
 
-    res.status(200).json({ message: "artists details fetched successfully", artist })
+    const artistWithProficUrl = await Promise.all(
+      artist.map(async (a) => {
+
+        let artistProfilePic = ""
+
+        if (a.artist_profilePic) {
+          const ImageUrl = await getFileUrl(a.artist_profilePic);
+          if (ImageUrl !== undefined) {
+            artistProfilePic = ImageUrl
+          }
+        }
+        return {
+          artist_id: a.artist_id,
+          artist_bio: a.artist_bio,
+          artist_name: a.artist_name,
+          artist_profilePic: artistProfilePic
+        }
+
+      })
+    )
+
+    res.status(200).json({ message: "artists details fetched successfully", artists:artistWithProficUrl })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -468,7 +495,7 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
       return res.sendStatus(204);
     }
 
-     const song = await prisma.song.findUnique({
+    const song = await prisma.song.findUnique({
       where: {
         song_id: songId
       },
@@ -477,7 +504,7 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
       }
     });
 
-        if (!song?.song_id) {
+    if (!song?.song_id) {
       return res.status(400).json({ message: "song not found" })
     }
 

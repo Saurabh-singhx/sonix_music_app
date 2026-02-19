@@ -61,7 +61,7 @@ router.get("/getplaylistsongs/:playlistId",
 );
 
 // artist details routes ==----==>
-router.get("/getartist",
+router.get("/getartists",
     getartistsByUserLimiter,
     protectRoute,
     getArtists

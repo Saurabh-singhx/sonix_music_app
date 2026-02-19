@@ -14,6 +14,7 @@ export const generateToken = (userId: string, res: Response): string => {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
     sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
+    partitioned:process.env.NODE_ENV !== "development"
   });
 
   return token;

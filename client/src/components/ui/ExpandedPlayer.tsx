@@ -1,36 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  ChevronDown, 
-  Shuffle, 
-  Repeat, 
-  Volume2, 
-  Heart, 
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  ChevronDown,
+  Shuffle,
+  Repeat,
+  Volume2,
+  Heart,
   ListMusic,
   Share2,
   MoreHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import type { song } from '@/types/user.types';
 import { Sheet, SheetContent } from './SheetVariants';
 import { ScrollArea } from './ScrollArea';
 import { useGlobalPlayer } from '@/hooks/usePlayer';
 import type { Variants, Transition } from 'framer-motion';
-import { motion, AnimatePresence} from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePlayerStore } from '@/store/player/player.store';
 interface ExpandedPlayerProps {
   isOpen: boolean;
   onClose: () => void;
   onPlayPause: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  onSeek: (value: number) => void; 
-  tracks: song[];
-  currentTrackIndex: number | null;
-  onTrackSelect: (index: number) => void;
+  onSeek: (value: number) => void;
 }
 
 // FIX: Explicitly type the transition to satisfy TypeScript
@@ -42,19 +39,19 @@ const springTransition: Transition = {
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
-    transition: { 
-      staggerChildren: 0.1, 
-      delayChildren: 0.2 
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
     }
   }
 };
 
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
-  visible: { 
-    y: 0, 
+  visible: {
+    y: 0,
     opacity: 1,
     transition: springTransition
   }
@@ -62,22 +59,22 @@ const itemVariants: Variants = {
 
 const queueVariants: Variants = {
   hidden: { x: "100%", opacity: 0 },
-  visible: { 
-    x: 0, 
+  visible: {
+    x: 0,
     opacity: 1,
     transition: {
-      type: "spring", 
-      stiffness: 300, 
+      type: "spring",
+      stiffness: 300,
       damping: 30
     }
   },
-  exit: { 
-    x: "100%", 
+  exit: {
+    x: "100%",
     opacity: 0,
-    transition: { 
-      type: "spring", 
-      stiffness: 300, 
-      damping: 30 
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 30
     }
   }
 };
@@ -89,18 +86,16 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   onNext,
   onPrevious,
   onSeek,
-  tracks,
-  currentTrackIndex,
-  onTrackSelect,
 }) => {
   const [showQueue, setShowQueue] = useState(false);
   const [volume, setVolume] = useState([80]);
   const [isLiked, setIsLiked] = useState(false);
-  const { progress, currentTime, currentTrack, playing } = useGlobalPlayer();
+  const { progress, currentTime, playing ,duration} = useGlobalPlayer();
+  const { queue, setCurrent, currentTrack, currentSongindex,setQueue } = usePlayerStore();
 
   // Handle responsive queue visibility
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
@@ -109,11 +104,17 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   }, []);
 
   if (!currentTrack) return null;
+      const formatTime = (seconds: number): string => {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent 
-        side="bottom" 
+      <SheetContent
+        side="bottom"
         className="h-screen p-0 bg-background/95 backdrop-blur-xl border-none rounded-none overflow-hidden"
       >
         {/* Background Ambient Glow */}
@@ -122,33 +123,33 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
           <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[100px]" />
         </div>
 
-        <motion.div 
+        <motion.div
           className="flex flex-col h-full relative z-10"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {/* Header */}
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             className="flex items-center justify-between p-6"
           >
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
               className="rounded-full hover:bg-white/10"
             >
               <ChevronDown className="w-6 h-6" />
             </Button>
-            
+
             <div className="flex flex-col items-center">
               <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Now Playing</span>
             </div>
 
             <div className="flex gap-2">
-               <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => setShowQueue(!showQueue)}
                 className={`rounded-full transition-colors ${showQueue ? 'text-primary bg-primary/10' : 'hover:bg-white/10'}`}
@@ -159,9 +160,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
           </motion.div>
 
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            
+
             {/* Main Player Area */}
-            <motion.div 
+            <motion.div
               className={`
                 flex-1 flex flex-col items-center justify-center p-6 relative transition-all duration-500 ease-in-out
                 ${showQueue && isMobile ? 'hidden' : 'flex'}
@@ -171,7 +172,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
               {/* Album Art Container with Visualizer Rings */}
               <div className="relative mb-10 group">
                 {/* Outer Glow Ring */}
-                <motion.div 
+                <motion.div
                   animate={playing ? {
                     scale: [1, 1.05, 1],
                     opacity: [0.3, 0.6, 0.3],
@@ -182,9 +183,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   className="absolute -inset-4 rounded-3xl border-2 border-primary/30 blur-sm"
                 />
-                
+
                 {/* Middle Ring */}
-                <motion.div 
+                <motion.div
                   animate={playing ? {
                     scale: [1, 1.08, 1],
                     rotate: [0, 90, 0],
@@ -199,7 +200,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                 />
 
                 {/* Inner Pulse Ring */}
-                <motion.div 
+                <motion.div
                   animate={playing ? {
                     scale: [1, 1.02, 1],
                     opacity: [0.5, 0.8, 0.5]
@@ -212,21 +213,31 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                 />
 
                 {/* Main Album Art */}
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02 }}
                   className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-2xl bg-linear-to-br from-card to-muted shadow-2xl flex items-center justify-center overflow-hidden relative border border-white/5"
                 >
-                   {/* Placeholder Art Content */}
-                   <div className="absolute inset-0 bg-linear-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
-                   <motion.div 
-                      animate={playing ? { rotate: 360 } : { rotate: 0 }}
-                      transition={playing ? { duration: 20, repeat: Infinity, ease: "linear" } : {}}
-                      className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-background/10 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner"
-                   >
-                      <span className="text-6xl sm:text-7xl font-bold text-white/90 select-none">
-                        {currentTrack.song_title.charAt(0).toUpperCase()}
-                      </span>
-                   </motion.div>
+                  {/* Placeholder Art Content */}
+                  <div className="absolute inset-0 bg-linear-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20" />
+                  <motion.div
+                    animate={playing ? { rotate: 360 } : { rotate: 0 }}
+                    transition={playing ? { duration: 20, repeat: Infinity, ease: "linear" } : {}}
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-background/10 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner"
+                  >
+                    {/* <span className="text-6xl sm:text-7xl font-bold text-white/90 select-none">
+                        
+                      </span> */}
+
+                    <img
+                      src={currentTrack?.cover_image_url || "/placeholder-cover.png"}
+                      alt={currentTrack?.song_title ?? "cover"}
+                      className="w-full h-full object-cover rounded-full"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = "/placeholder-cover.png";
+                      }}
+                    />
+
+                  </motion.div>
                 </motion.div>
               </div>
 
@@ -251,7 +262,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                 />
                 <div className="flex justify-between text-xs font-medium text-muted-foreground tabular-nums">
                   <span>{currentTime}</span>
-                  <span>{currentTrack.duration}</span>
+                  <span>{formatTime(duration)}</span>
                 </div>
               </motion.div>
 
@@ -260,11 +271,11 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full w-12 h-12 transition-all">
                   <Shuffle className="w-5 h-5" />
                 </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={onPrevious} 
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onPrevious}
                   className="text-foreground hover:text-primary hover:bg-primary/10 rounded-full w-14 h-14 transition-all"
                 >
                   <SkipBack className="w-8 h-8 fill-current" />
@@ -284,10 +295,10 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   </Button>
                 </motion.div>
 
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={onNext} 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onNext}
                   className="text-foreground hover:text-primary hover:bg-primary/10 rounded-full w-14 h-14 transition-all"
                 >
                   <SkipForward className="w-8 h-8 fill-current" />
@@ -300,39 +311,39 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
 
               {/* Bottom Actions (Like, Volume) */}
               <motion.div variants={itemVariants} className="flex items-center justify-between w-full max-w-md px-4">
-                 <div className="flex gap-4">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => setIsLiked(!isLiked)}
-                      className={`rounded-full transition-colors ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full">
-                      <Share2 className="w-5 h-5" />
-                    </Button>
-                 </div>
+                <div className="flex gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsLiked(!isLiked)}
+                    className={`rounded-full transition-colors ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full">
+                    <Share2 className="w-5 h-5" />
+                  </Button>
+                </div>
 
-                 <div className="flex items-center gap-3 group">
-                    <Volume2 className="w-5 h-5 text-muted-foreground" />
-                    <div className="w-24 sm:w-32">
-                      <Slider
-                        value={volume}
-                        max={100}
-                        step={1}
-                        onValueChange={setVolume}
-                        className="cursor-pointer"
-                      />
-                    </div>
-                 </div>
+                <div className="flex items-center gap-3 group">
+                  <Volume2 className="w-5 h-5 text-muted-foreground" />
+                  <div className="w-24 sm:w-32">
+                    <Slider
+                      value={volume}
+                      max={100}
+                      step={1}
+                      onValueChange={setVolume}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
 
             {/* Queue Sidebar */}
             <AnimatePresence>
               {(showQueue || !isMobile) && (
-                <motion.div 
+                <motion.div
                   variants={queueVariants}
                   initial="hidden"
                   animate="visible"
@@ -348,42 +359,47 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   <div className="p-6 border-b border-border/50 flex items-center justify-between bg-background/50 lg:bg-transparent">
                     <div>
                       <h3 className="text-xl font-bold">Up Next</h3>
-                      <p className="text-sm text-muted-foreground">{tracks.length} tracks in queue</p>
+                      <p className="text-sm text-muted-foreground">{queue.length} tracks in queue</p>
                     </div>
                     {/* Mobile Close Queue Button */}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="lg:hidden rounded-full"
                       onClick={() => setShowQueue(false)}
                     >
                       Close
                     </Button>
                   </div>
-                  
+
                   <ScrollArea className="flex-1 px-4 py-2">
                     <div className="space-y-1">
-                      {tracks.map((track, index) => {
-                        const isActive = currentTrackIndex === index;
+                      {queue?.map((track, index) => {
+                        const isActive = currentSongindex === index;
                         return (
                           <motion.button
                             key={track.song_id}
                             layout
                             onClick={() => {
-                              onTrackSelect(index);
+                              if(currentTrack){
+                                setCurrent(track,progress);
+                              }else{
+                                setCurrent(track)
+                              }
+
                               if (isMobile) setShowQueue(false);
                             }}
                             className={`
                               w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden
-                              ${isActive 
-                                ? 'bg-primary/10 border border-primary/20' 
+                              ${isActive
+                                ? 'bg-primary/10 border border-primary/20'
                                 : 'hover:bg-accent/50 border border-transparent'
                               }
                             `}
                           >
                             {/* Active Indicator Bar */}
                             {isActive && (
-                              <motion.div 
+                              <motion.div
                                 layoutId="activeIndicator"
                                 className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
                               />
@@ -392,20 +408,20 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                             {/* Track Number / Visualizer */}
                             <div className={`
                               w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-medium text-sm
-                              ${isActive 
-                                ? 'bg-primary text-primary-foreground' 
+                              ${isActive
+                                ? 'bg-primary text-primary-foreground'
                                 : 'bg-muted text-muted-foreground group-hover:bg-background'
                               }
                             `}>
                               {isActive && playing ? (
                                 <div className="flex gap-0.5 items-end h-4">
                                   {[1, 2, 3].map(i => (
-                                    <motion.div 
-                                      key={i} 
+                                    <motion.div
+                                      key={i}
                                       animate={{ height: [4, 16, 8, 16, 4] }}
-                                      transition={{ 
-                                        duration: 0.5, 
-                                        repeat: Infinity, 
+                                      transition={{
+                                        duration: 0.5,
+                                        repeat: Infinity,
                                         delay: i * 0.1,
                                         ease: "easeInOut"
                                       }}

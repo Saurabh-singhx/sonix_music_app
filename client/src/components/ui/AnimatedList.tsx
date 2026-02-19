@@ -3,6 +3,7 @@ import type { ReactNode, MouseEventHandler, UIEvent } from "react";
 import { motion, useInView } from 'motion/react';
 import './AnimatedList.css';
 import type { song } from "@/types/user.types";
+import { usePlayerStore } from "@/store/player/player.store";
 
 interface AnimatedItemProps {
   children: ReactNode;
@@ -40,6 +41,9 @@ interface AnimatedListProps {
   itemClassName?: string;
   displayScrollbar?: boolean;
   initialSelectedIndex?: number;
+  playing: boolean;
+  currentTime: string;
+  duration: number;
 }
 
 const AnimatedList: React.FC<AnimatedListProps> = ({
@@ -48,18 +52,20 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   showGradients = true,
   enableArrowNavigation = true,
   className = '',
-  itemClassName = '',
   displayScrollbar = true,
-  initialSelectedIndex = -1
+  initialSelectedIndex = -1,
+  playing,
+
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
+  const { currentSongindex } = usePlayerStore();
 
-  const handleItemMouseEnter = useCallback((index: number) => {
-    setSelectedIndex(index);
+  const handleItemMouseEnter = useCallback(() => {
+    // setSelectedIndex(index);
   }, []);
 
   const handleItemClick = useCallback(
@@ -127,22 +133,99 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     setKeyboardNav(false);
   }, [selectedIndex, keyboardNav]);
 
+  function formatFileSize(bytes: number) {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
+  }
+
   return (
     <div className={`scroll-list-container ${className}`}>
       <div ref={listRef} className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''}`} onScroll={handleScroll}>
-        {items?.map((item, index) => (
-          <AnimatedItem
-            key={index}
-            delay={0.1}
-            index={index}
-            onMouseEnter={() => handleItemMouseEnter(index)}
-            onClick={() => handleItemClick(item, index)}
-          >
-            <div className={`item ${selectedIndex === index ? 'selected' : ''} ${itemClassName} `}>
+        {items?.map((track, index) => {
+          const isActive = currentSongindex === index;
+          return (
+            <AnimatedItem
+              key={index}
+              delay={0.1}
+              index={index}
+              // onMouseEnter={() => handleItemMouseEnter(index)}
+              onClick={() => handleItemClick(track, index)}
+            >
+              {/* <div className={`item ${selectedIndex === index ? 'selected' : ''} ${itemClassName} `}>
               <p className="item-text">{item.song_title}</p>
-            </div>
-          </AnimatedItem>
-        ))}
+            </div> */}
+
+              <motion.div
+                key={track.song_id}
+                layout
+                className={`
+                              w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden
+                              ${isActive
+                    ? 'bg-primary/10 border border-primary/20'
+                    : 'hover:bg-accent/50 border border-transparent'
+                  }
+                            `}
+              >
+                {/* Active Indicator Bar */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
+                  />
+                )}
+
+                {/* Track Number / Visualizer */}
+                <div className={`
+                              w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-medium text-sm
+                              ${isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground group-hover:bg-background'
+                  }
+                            `}>
+                  {isActive && playing ? (
+                    <div className="flex gap-0.5 items-end h-4">
+                      {[1, 2, 3].map(i => (
+                        <motion.div
+                          key={i}
+                          animate={{ height: [4, 16, 8, 16, 4] }}
+                          transition={{
+                            duration: 0.5,
+                            repeat: Infinity,
+                            delay: i * 0.1,
+                            ease: "easeInOut"
+                          }}
+                          className="w-1 bg-current rounded-full"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span>{index + 1}</span>
+                  )}
+                </div>
+
+                {/* Track Details */}
+                <div className="min-w-0 flex-1">
+                  <p className={`font-semibold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                    {track.song_title}
+                  </p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {track.artist.artist_name}
+                  </p>
+                </div>
+
+                {/* Duration / Options */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {formatFileSize(track.duration)}
+                  </span>
+                  {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button> */}
+                </div>
+              </motion.div>
+            </AnimatedItem>
+          )
+        })}
       </div>
       {showGradients && (
         <>

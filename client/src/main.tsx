@@ -9,15 +9,13 @@ import { AudioPlayerProvider } from 'react-use-audio-player'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AudioPlayerProvider>
+    <AudioPlayerProvider>
+      <BrowserRouter>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
           <App />
-        </AudioPlayerProvider>
-
-      </ThemeProvider>
-    </BrowserRouter>
+        </ThemeProvider>
+      </BrowserRouter>
+    </AudioPlayerProvider>
   </StrictMode>,
 )

@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import AuthMusiCard from '@/components/AuthMusiCardAnimate';
-import { BackgroundOrbs } from '@/components/BackgroundOrbs';
-import { InputField } from '@/components/InputField';
-import { GenderCard } from '@/components/GenderCard';
-import { OTPInput } from '@/components/OtpInput';
+import { BackgroundOrbs } from '@/components/ui/BackgroundOrbs';
+import { InputField } from '@/components/ui/InputField';
+import { GenderCard } from '@/components/ui/GenderCard';
+import { OTPInput } from '@/components/ui/OtpInput';
 import { useAuthStore } from '@/store/auth/auth.store';
 import type { SignupPayload } from '@/types/auth.types';
+import AuthMusiCard from '@/components/ui/AuthMusiCardAnimate';
 
 
 export default function SignupPage() {
@@ -429,10 +429,10 @@ export default function SignupPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit}
-                  disabled={isSigningUp || formData.otp.length < 6}
+                  disabled={isSigningUp || formData.otp.length < 6 || isCreatingGuest}
                   className="bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-green-500/25 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSigningUp ? (
+                  {isSigningUp || isCreatingGuest ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>

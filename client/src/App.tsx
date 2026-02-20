@@ -3,34 +3,45 @@ import { useEffect } from 'react'
 import './index.css'
 import { useAuthStore } from './store/auth/auth.store'
 import { Navigate, Route, Routes } from 'react-router-dom';
-import LoginPage from './pages/auth/LoginPage';
 import { AdminHomePage } from './pages/admin/AdminHomePage';
-import UserHomePage from './pages/user/UserHomePage';
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce, ToastContainer } from "react-toastify";
 import "./App.css"
-
-document.documentElement.classList.add("dark");
-
+import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
+import UserPage from './pages/user/UserPage';
+import AllSongsPage from './pages/user/AllSongsPage';
+import AppLayout from './pages/AppLayout';
+import MusicLoader from './components/ui/Loader';
 
 
 function App() {
 
-  const { checkAuth, authUser } = useAuthStore();
+  const { checkAuth, authUser, isCheckingAuth, isLoggingOut } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
+    if (authUser?.role !== "guest") {
+      checkAuth();
+    }
   }, [])
+
+  if (isCheckingAuth || isLoggingOut) {
+    return (
+      <MusicLoader />
+    )
+  }
 
 
   return (
-    <div className='bg-card'>
-      <Routes>
+    <div className=''>
+      <Routes >
 
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
-        <Route path="/" element={authUser?.role === 'ADMIN' ? <AdminHomePage /> : authUser?.role === 'USER' ? <UserHomePage /> : <Navigate to="/login" />} />
-        {/* <Route path="/" element={authUser?.role === 'user' ? <UserHomePage/> : <Navigate to="/login" />} /> */}
-
+        <Route path="/signup" element={!authUser ? <SignupPage /> : <Navigate to="/" />} />
+        <Route element = {authUser?<AppLayout/>:<Navigate to="/login"/>}>
+          <Route path="/" element={authUser?.role === 'ADMIN' ? <AdminHomePage /> : authUser?.role ? <UserPage /> : <Navigate to="/login" />} />
+          <Route path="/allsongs" element={authUser?.role ? <AllSongsPage /> : <Navigate to="/login" />} />
+        </Route>
       </Routes>
       <ToastContainer
         position="bottom-right"

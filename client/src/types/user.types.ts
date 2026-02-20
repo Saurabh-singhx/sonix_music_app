@@ -23,7 +23,18 @@ export interface userStoreT {
     trendingSongs:song[];
     recommendedSongs:song[];
     recentlyPlayedSongs:song[];
+    recommendedNextCursor:string | null;
+    isGettingRecommendedSongs:boolean;
+    isGettingTrendingSongs:boolean;
+    isGettingArtistsList:boolean;
+    artists:artist[];
+    AllSongs:song[];
+    isLimitReached:boolean;
 
-    getRecentSongs: (limit:number | null,cursor:string | null) => Promise<void>;
-
+    getRecentSongs: (limit:number | null) => Promise<void>;
+    updateSongEvent:(currentTrack:song,duration:number)=> Promise<void>;
+    getRecommendedSongs:(limit:number | null) =>Promise<void>;
+    getTrendingSongs:() =>Promise<void>;
+    getArtistList:()=>Promise<void>;
+    setisLimitReached:(value:boolean)=>void;
 }

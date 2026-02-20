@@ -3,29 +3,38 @@ import { usePlayerStore } from "@/store/player/player.store";
 import { useUserStore } from "@/store/user/user.store";
 import { Disc, Play } from "lucide-react";
 import { motion } from "framer-motion"
-import { useGlobalPlayer } from "@/hooks/usePlayer";
+import { useNavigate } from "react-router-dom";
 
-export const AllSongsSection = ({ fullPage = false }: { fullPage?: boolean }) => {
-    const { recentSongs,updateSongEvent } = useUserStore();
+interface AllSongsPageProps{
+    progress:number,
+    playing:boolean
+}
+export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress}) => {
+    const { recentSongs } = useUserStore();
     const { currentTrack,setQueue } = usePlayerStore();
-    const {playing,progress} = useGlobalPlayer();
-
+    const navigate = useNavigate();
     const handleSongPLay = (index:number)=>{
 
         if(currentTrack){
-            const currSong = currentTrack;
-            updateSongEvent(currSong,Math.floor(progress))
+            setQueue(recentSongs,index,progress);
+        }else{
+            setQueue(recentSongs,index);
         }
-        setQueue(recentSongs,index);
+    }
+
+    const navigation = ()=>{
+        navigate("/allsongs")
     }
     return (
-        <section className={cn("mb-12", fullPage && "pt-8")}>
+        <section className={cn("mb-12")}>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                     <Disc className="w-6 h-6 text-white" />
                     <h2 className="text-2xl font-bold tracking-tighter text-white">ALL SONGS</h2>
                 </div>
-                {!fullPage && <button className="text-xs text-zinc-400 hover:text-white transition-colors uppercase tracking-widest">View All</button>}
+                <button 
+                onClick={navigation}
+                className="text-xs text-zinc-400 hover:text-white transition-colors uppercase tracking-widest">View All</button>
             </div>
 
             <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-hidden">

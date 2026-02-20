@@ -2,12 +2,12 @@ import { useState, type ChangeEvent } from "react";
 import { Mail, Lock, ArrowRight, UserCircle, } from 'lucide-react';
 import { motion} from 'framer-motion';
 
-import { BackgroundOrbs } from "@/components/BackgroundOrbs";
-import { InputField } from "@/components/InputField";
+import { BackgroundOrbs } from "@/components/ui/BackgroundOrbs";
+import { InputField } from "@/components/ui/InputField";
 import { useNavigate } from "react-router-dom";
-import AuthMusiCard from "@/components/AuthMusiCardAnimate";
 import { useAuthStore } from "@/store/auth/auth.store";
 import type { LoginPayload } from "@/types/auth.types";
+import AuthMusiCard from "@/components/ui/AuthMusiCardAnimate";
 
 
 export default function LoginPage() {
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const {login,isLoggingIn,constinueAsGuest} = useAuthStore()
+  const {login,isLoggingIn,constinueAsGuest,isCreatingGuest} = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,10 +112,10 @@ export default function LoginPage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isLoggingIn}
+                disabled={isLoggingIn || isCreatingGuest}
                 className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoggingIn ? (
+                {isLoggingIn || isCreatingGuest? (
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

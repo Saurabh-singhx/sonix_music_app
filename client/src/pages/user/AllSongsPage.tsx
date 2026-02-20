@@ -27,7 +27,7 @@ const AllSongsPage = () => {
                 className=""
                 itemClassName=""
                 items={recentSongs}
-                onItemSelect={(item, index) => handleplayer(item)}
+                onItemSelect={(item) => handleplayer(item)}
                 showGradients
                 enableArrowNavigation
                 displayScrollbar

@@ -17,10 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent } from './SheetVariants';
 import { ScrollArea } from './ScrollArea';
-import { useGlobalPlayer } from '@/hooks/usePlayer';
 import type { Variants, Transition } from 'framer-motion';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@/store/player/player.store';
+
 interface ExpandedPlayerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,6 +28,10 @@ interface ExpandedPlayerProps {
   onNext: () => void;
   onPrevious: () => void;
   onSeek: (value: number) => void;
+  progress:number;
+  duration:number;
+  currentTime:string;
+  playing:boolean;
 }
 
 // FIX: Explicitly type the transition to satisfy TypeScript
@@ -79,6 +83,7 @@ const queueVariants: Variants = {
   }
 };
 
+
 export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   isOpen,
   onClose,
@@ -86,12 +91,15 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   onNext,
   onPrevious,
   onSeek,
+  currentTime,
+  playing,
+  progress,
+  duration
 }) => {
   const [showQueue, setShowQueue] = useState(false);
   const [volume, setVolume] = useState([80]);
   const [isLiked, setIsLiked] = useState(false);
-  const { progress, currentTime, playing ,duration} = useGlobalPlayer();
-  const { queue, setCurrent, currentTrack, currentSongindex,setQueue } = usePlayerStore();
+  const { queue, setCurrent, currentTrack, currentSongindex } = usePlayerStore();
 
   // Handle responsive queue visibility
   const [isMobile, setIsMobile] = useState(false);
@@ -104,12 +112,12 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   }, []);
 
   if (!currentTrack) return null;
-      const formatTime = (seconds: number): string => {
-        if (!seconds || isNaN(seconds)) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+  const formatTime = (seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -381,9 +389,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                             key={track.song_id}
                             layout
                             onClick={() => {
-                              if(currentTrack){
-                                setCurrent(track,progress);
-                              }else{
+                              if (currentTrack) {
+                                setCurrent(track, progress);
+                              } else {
                                 setCurrent(track)
                               }
 

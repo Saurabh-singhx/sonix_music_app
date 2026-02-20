@@ -34,6 +34,7 @@ export interface AuthStoreT {
     isSigningUp:boolean;
     isSendingOtp:boolean;
     isCreatingGuest:boolean;
+    isCheckingAuth:boolean;
 
     login: (data: LoginPayload) => Promise<number | undefined>;
     checkAuth: () => Promise<void>;

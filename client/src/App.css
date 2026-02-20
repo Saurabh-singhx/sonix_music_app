@@ -128,3 +128,12 @@
     @apply bg-background text-foreground;
   }
 }
+@theme {
+  --animate-shimmer: shimmer 1.5s linear infinite;
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}

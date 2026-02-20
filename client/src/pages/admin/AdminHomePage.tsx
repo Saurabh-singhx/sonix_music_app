@@ -11,11 +11,6 @@ export const AdminHomePage = () => {
 
   const [currentView, setCurrentView] = useState('artists')
 
-
-  const onLogout = () => {
-
-  }
-
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
@@ -45,7 +40,6 @@ export const AdminHomePage = () => {
       <AdminSidebar
         currentView={currentView}
         onViewChange={setCurrentView}
-        onLogout={onLogout}
       />
 
       <main className="flex-1 p-6 md:p-8 lg:p-10 overflow-auto">

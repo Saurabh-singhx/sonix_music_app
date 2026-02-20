@@ -64,10 +64,6 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
   const { currentSongindex } = usePlayerStore();
 
-  const handleItemMouseEnter = useCallback(() => {
-    // setSelectedIndex(index);
-  }, []);
-
   const handleItemClick = useCallback(
     (item: song, index: number) => {
       setSelectedIndex(index);

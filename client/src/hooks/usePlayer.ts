@@ -17,7 +17,6 @@ export function useGlobalPlayer() {
     if (prevUrlRef.current === currentTrack.song_id) return;
 
     prevUrlRef.current = currentTrack.song_id;
-    console.log(currentTrack.song_id ,"===", prevUrlRef)
     player.stop();
     player.load(currentTrack.song_url, {
       html5: true,
@@ -58,8 +57,6 @@ export function useGlobalPlayer() {
     setCurrentTime(`${mins}:${secs.toString().padStart(2, '0')}`);
 
   }, [position, player.duration, currentTrack]);
-
-
 
   return {
     /* state */

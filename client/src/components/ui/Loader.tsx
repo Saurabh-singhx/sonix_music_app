@@ -29,7 +29,7 @@ const SimpleMusicFlowLoader = () => {
 };
 
 // Wrapper component to demonstrate the loader in a dark context
-export default function MusicLoaderDemo() {
+export default function MusicLoader() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-12 p-8">
       

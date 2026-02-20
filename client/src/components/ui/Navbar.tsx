@@ -27,7 +27,7 @@ function Navbar() {
           />
         </div>
         
-        <span className='font-black text-3xl tracking-tighter group-hover:tracking-wide transition-all duration-300 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/50 group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-white'>
+        <span className='font-black text-3xl tracking-tighter group-hover:tracking-wide transition-all duration-300 bg-clip-text text-transparent bg-linear-to-r from-white to-white/50 group-hover:bg-linear-to-r group-hover:from-primary group-hover:to-white'>
           SONIX
         </span>
       </div>

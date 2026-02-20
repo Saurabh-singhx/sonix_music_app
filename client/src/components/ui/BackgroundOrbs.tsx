@@ -12,7 +12,7 @@ export const BackgroundOrbs = () => {
           y: [0, -30, 0]
         }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[100px]"
+        className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-purple-900/30 rounded-full blur-[100px]"
       />
       <motion.div 
         animate={{ 
@@ -22,7 +22,7 @@ export const BackgroundOrbs = () => {
           y: [0, 60, 0]
         }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/30 rounded-full blur-[120px]"
+        className="absolute bottom-[-10%] right-[-10%] w-150 h-150 bg-indigo-900/30 rounded-full blur-[120px]"
       />
       <motion.div 
         animate={{ 
@@ -30,7 +30,7 @@ export const BackgroundOrbs = () => {
           opacity: [0.1, 0.3, 0.1],
         }}
         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute top-[40%] left-[40%] w-[400px] h-[400px] bg-blue-900/20 rounded-full blur-[90px]"
+        className="absolute top-[40%] left-[40%] w-100 h-[100 bg-blue-900/20 rounded-full blur-[90px]"
       />
     </div>
   );

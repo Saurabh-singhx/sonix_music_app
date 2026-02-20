@@ -15,11 +15,13 @@ import {
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
+import { useAuthStore } from '@/store/auth/auth.store';
+
+
 
 interface AdminSidebarProps {
   currentView: string;
   onViewChange: (view: string) => void;
-  onLogout: () => void;
 }
 
 const menuItems = [
@@ -31,8 +33,15 @@ const menuItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const AdminSidebar = ({ currentView, onViewChange, onLogout }: AdminSidebarProps) => {
+const AdminSidebar = ({ currentView, onViewChange }: AdminSidebarProps) => {
+
   const [collapsed, setCollapsed] = useState(false);
+  const {logout} = useAuthStore();
+
+  const handlLogout = ()=>{
+    console.log("logging out...")
+    logout();
+  }
 
   return (
     <aside 
@@ -93,10 +102,10 @@ const AdminSidebar = ({ currentView, onViewChange, onLogout }: AdminSidebarProps
           </button>
         </Link>
         <button
-          onClick={onLogout}
+          onClick={handlLogout}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
-            "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+            "text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer",
             collapsed && "justify-center px-2"
           )}
         >

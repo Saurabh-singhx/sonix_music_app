@@ -1,53 +1,74 @@
 // store/playerStore.ts
-import type { song } from "@/types/user.types";
+import type { PlayerState } from "@/types/player.types";
 import { create } from "zustand";
-
-
-interface PlayerState {
-  currentTrack: song | null;
-  queue: song[];
-  index: number;
-
-  setQueue: (songs: song[], startIndex?: number) => void;
-  setCurrent: (song: song) => void;
-  next: () => void;
-  prev: () => void;
-  clear: () => void;
-}
+import { useUserStore } from "../user/user.store";
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   currentTrack: null,
   queue: [],
-  index: 0,
+  currentSongindex: 0,
 
-  setQueue: (songs, startIndex = 0) =>
+  setQueue: (songs, startIndex, duration) => {
+
+    const { currentTrack } = get();
+    const { currentSongindex } = get();
+    if (duration && currentTrack && (currentSongindex !== startIndex)) {
+      useUserStore.getState().updateSongEvent(currentTrack, duration);
+    }
+
     set({
       queue: songs,
-      index: startIndex,
-      currentTrack: songs[startIndex] ?? null,
-    }),
+      currentSongindex: startIndex,
+      currentTrack: songs[startIndex || 0] ?? null,
+    })
+  },
 
-  setCurrent: (song) => set({ currentTrack: song }),
 
-  next: () => {
-    const { queue, index } = get();
-    const nextIndex = index + 1;
+  setCurrent: (song, duration) => {
+    const { queue } = get();
+    const { currentTrack } = get();
+    const { currentSongindex } = get();
+
+    set({ currentTrack: song })
+    if (queue.length >= 1) {
+      for (let s = 0; s < queue.length; s++) {
+        if (song?.song_id === queue[s].song_id) {
+          
+          if (duration && currentTrack && (currentSongindex !== s)) {
+            useUserStore.getState().updateSongEvent(currentTrack, duration);
+          }
+          set({ currentSongindex: s });
+          break;
+        }
+      }
+    }
+  },
+
+  next: (currentTrack, duration) => {
+    const { queue, currentSongindex } = get();
+    const nextIndex = currentSongindex + 1;
     if (!queue[nextIndex]) return;
     set({
-      index: nextIndex,
+      currentSongindex: nextIndex,
       currentTrack: queue[nextIndex],
     });
+    if (currentTrack) {
+      useUserStore.getState().updateSongEvent(currentTrack, duration)
+    }
   },
 
-  prev: () => {
-    const { queue, index } = get();
-    const prevIndex = index - 1;
+  prev: (currentTrack,duration) => {
+    const { queue, currentSongindex} = get();
+    const prevIndex = currentSongindex - 1;
     if (!queue[prevIndex]) return;
     set({
-      index: prevIndex,
+      currentSongindex: prevIndex,
       currentTrack: queue[prevIndex],
     });
+    if (currentTrack) {
+      useUserStore.getState().updateSongEvent(currentTrack, duration)
+    }
   },
 
-  clear: () => set({ currentTrack: null, queue: [], index: 0 }),
+  clear: () => set({ currentTrack: null, queue: [], currentSongindex: 0 }),
 }));

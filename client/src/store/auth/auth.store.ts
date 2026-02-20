@@ -4,6 +4,7 @@ import type { AuthStoreT } from "../../types/auth.types";
 import { toast } from "react-toastify";
 import { useAdminStore } from "../admin/admin.store";
 import { AxiosError } from "axios";
+import { useUserStore } from "../user/user.store";
 
 
 
@@ -15,6 +16,7 @@ export const useAuthStore = create<AuthStoreT>((set,get) => ({
     isSigningUp: false,
     isSendingOtp: false,
     isCreatingGuest: false,
+    isCheckingAuth:false,
 
     login: async (data) => {
         set({ isLoggingIn: true });
@@ -37,11 +39,20 @@ export const useAuthStore = create<AuthStoreT>((set,get) => ({
     },
 
     checkAuth: async () => {
+        set({isCheckingAuth:true})
+        const {authUser} = get();
+        const {setisLimitReached} = useUserStore.getState();
         try {
             const res = await axiosInstance.get("/api/v1/auth/checkauth");
             set({ authUser: res.data?.userData });
         } catch (error) {
-            console.log("error while checking Auth");
+            if(error instanceof AxiosError){
+                if(error.status === 429 && authUser?.role === "guest"){
+                    setisLimitReached(true);
+                }
+            }
+        }finally{
+            set({isCheckingAuth:false})
         }
     },
 

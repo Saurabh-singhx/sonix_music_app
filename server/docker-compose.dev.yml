@@ -4,7 +4,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: api
+    # container_name: api
     ports:
       - "3000:3000"
     env_file:

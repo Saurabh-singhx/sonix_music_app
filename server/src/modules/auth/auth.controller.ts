@@ -221,7 +221,12 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
     try {
-        res.cookie("jwtauth", "", { maxAge: 0 })
+        res.clearCookie("jwtauth", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== "development",
+            sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
+            partitioned: process.env.NODE_ENV !== "development",
+        });
 
         return res.status(200).json({ message: "logged out successfully" })
     } catch (error) {

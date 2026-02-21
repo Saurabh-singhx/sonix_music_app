@@ -24,7 +24,7 @@ const PORT: number = Number(process.env.PORT) || 4000;
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(cookieParser());
-app.set('trust proxy', 1);
+app.set('trust proxy', 2);
 
 app.use(
   cors({

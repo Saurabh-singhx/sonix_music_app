@@ -1,47 +1,46 @@
 import cron from "node-cron";
-import { updateRecommendationsSummary, updateRecommendationWithAi } from "../services/recommendation.services.js";
-import prisma from "../lib/prisma.js";
+import { calculateSongSuggestion } from "../services/suggestion.services.js";
 
-cron.schedule("*/1 * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
     try {
-        console.log("⏳ Updating recommendations songs...");
+        console.log("⏳ Updating suggestion songs...");
 
+        await calculateSongSuggestion();
+        // const users = await prisma.user.findMany({
 
-        const users = await prisma.user.findMany({
+        //     // where:{
+        //     //     role:'USER'  
+        //     // },
+        //     select: {
+        //         user_id: true
+        //     }
+        // })
 
-            // where:{
-            //     role:'USER'  
-            // },
-            select: {
-                user_id: true
-            }
-        })
+        // if (users.length === 0) {
+        //     console.log("no users found");
+        //     return;
+        // }
+        // let summary = "";
 
-        if (users.length === 0) {
-            console.log("no users found");
-            return;
-        }
-        let summary = "";
+        // for (const user of users) {
 
-        for (const user of users) {
+        //     console.log("creating summary...")
+        //     summary += await updateRecommendationsSummary(user.user_id); //fix here
 
-            console.log("creating summary...")
-            summary += await updateRecommendationsSummary(user.user_id); //fix here
+        //     if(!summary.length){
+        //         console.log(`no summary found for ${user.user_id}`)
+        //         continue;
+        //     }
 
-            if(!summary.length){
-                console.log(`no summary found for ${user.user_id}`)
-                continue;
-            }
-
-            console.log(`updating recommendations... for user ${user.user_id}`)
+        //     console.log(`updating recommendations... for user ${user.user_id}`)
             
-            await updateRecommendationWithAi(summary,user.user_id);//fix here
-            summary = "";
-        }
+        //     await updateRecommendationWithAi(summary,user.user_id);//fix here
+        //     summary = "";
+        // }
 
 
-        console.log("✅ recommendations updated");//fix here
+        console.log("✅ suggestion updated");
     } catch (err) {
-        console.error("❌ recommendation cron failed", err);
+        console.error("❌ suggestion cron failed", err);
     }
 });

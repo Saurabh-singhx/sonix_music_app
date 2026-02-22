@@ -8,8 +8,8 @@ const EVENT_SCORES: Record<string, number> = { //need fixing here <<==----==
 };
 
 const LIKE_SCORE = 5;
-const TRENDING_LIMIT = 100;
-const TIME_WINDOW_HOURS = 24 * 7;
+const SUGGESTION_LIMIT = 100;
+// const TIME_WINDOW_HOURS = 24 * 7;
 
 export const calculateSongSuggestion = async () => {
   try {
@@ -55,12 +55,26 @@ export const calculateSongSuggestion = async () => {
     // Sort & limit ==----==>
     const suggestion = [...scoreMap.entries()]
       .map(([songId, score]) => ({ songId, score }))
-      .filter(s => s.score > 0)
+      // .filter(s => s.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, TRENDING_LIMIT);
+      .slice(0, SUGGESTION_LIMIT);
 
-    return suggestion;
+
+    if (suggestion.length >= 10) {
+
+      await prisma.$transaction([
+        prisma.song_suggestion.deleteMany(),
+        prisma.song_suggestion.createMany({
+          data: suggestion.map((song, index) => ({
+            song_id: song.songId,
+            score: song.score,
+            rank: index + 1
+          }))
+        })
+      ]);
+    }
+    // return suggestion;
   } catch (error) {
-    console.error(error,"error while generating song suggestions")
+    console.error(error, "error while generating song suggestions")
   }
 }

@@ -10,7 +10,7 @@ const EVENT_SCORES: Record<string, number> = {
 
 const LIKE_SCORE = 5;
 const TRENDING_LIMIT = 20;
-const TIME_WINDOW_HOURS = 24 * 7;
+const TIME_WINDOW_HOURS = 24;
 
 export async function calculateTrending() {   //fix here <<==----==
 
@@ -85,8 +85,8 @@ export async function updateTrendingTable() {
       return;
     }
     await prisma.$transaction([
-      prisma.trendingSong.deleteMany(),
-      prisma.trendingSong.createMany({
+      prisma.trendingSongs.deleteMany(),
+      prisma.trendingSongs.createMany({
         data: trending.map((t, index) => ({
           song_id: t.songId,
           score: t.score,

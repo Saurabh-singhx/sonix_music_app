@@ -1,11 +1,8 @@
 import prisma from "../lib/prisma.js";
-
 import { SongEventType } from "../generated/prisma/client.js";
-import { calculateSongSuggestion } from "./suggestion.services.js";
-
-
-import { aiResponseRecommendations } from "./openai.services.js";
 import { geminiAiResponseRecommendations } from "./gemini.services.js";
+
+
 const EVENT_WEIGHT: Partial<Record<SongEventType, number>> = {
     COMPLETE: 3,
     REPEAT: 3,
@@ -27,6 +24,7 @@ export const updateRecommendationsSummary = async (user_id: string) => {
                 song: {
                     include: {
                         aiProfile: true,
+                        artist: true
                     },
 
                 },
@@ -118,11 +116,11 @@ export const updateRecommendationsSummary = async (user_id: string) => {
                     Math.max((energyScore[profile.energy_level] || 0) + weight, 0);
             }
 
-            if (event.song.artist_name) {
-                artistScore[event.song.artist_name] =
-                    Math.max((artistScore[event.song.artist_name] || 0) + weight, 0);
+            if (event.song.artist) {
+                artistScore[event.song.artist?.artist_name] =
+                    Math.max((artistScore[event.song.artist.artist_name] || 0) + weight, 0);
             }
-            
+
 
             if (profile.language) {
                 languageScore[profile.language] = Math.max(
@@ -228,110 +226,67 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
 
         let songIdMap = new Map<number, { song_id: string; baseScore: number }>();
 
-        const suggestions = await calculateSongSuggestion();
-
-        if (!suggestions?.length) {
-            console.log("song base suggestions not found...")
-
-            //tesing here ...
-            // console.log("trying gemini directly...")
-
-            // const TestSongDetails = await prisma.song.findMany({
-            //     select: {
-            //     song_id: true,
-            //     song_title: true,
-            //     genre: true,
-            //     aiProfile: {
-            //         select: {
-            //             language: true,
-            //             mood: true,
-            //             energy_level: true,
-            //             vibe_tags: true
-            //         }
-            //     }
-            //     }
-
-
-            // });
-
-            
-            // const candidateText = TestSongDetails.map((song,idx) => {
-
-            //     // const song = TestSongDetails.find(s => s.song_id === meta.song_id);// fix here <<==----==
-            //     // if (!song) return null;
-
-            //     return `
-            //     ${idx}.
-            //         song_title: ${song.song_title ?? "NA"}
-            //         genre: ${song.genre ?? "NA"}
-            //         mood: ${song.aiProfile?.mood ?? "NA"}
-            //         energy: ${song.aiProfile?.energy_level ?? "NA"}
-            //         language: ${song.aiProfile?.language ?? "NA"}
-            //         tags: ${song.aiProfile?.vibe_tags?.join(",") ?? "NA"}`;
-            // })
-            // .filter(Boolean)
-            // .join("\n");
-
-            // const responsefromai = await geminiAiResponseRecommendations("user likes english songs", candidateText);
-
-            // console.log(responsefromai);
-            return;
-        }
-
-        let index = 1;
-        for (const s of suggestions) {
-            if (!s.songId) {
-                continue;
-            }
-            songIdMap.set(index++, {
-                song_id: s.songId,
-                baseScore: s.score
-            });
-        }
-
-        const songIds = Array.from(songIdMap.values()).map(v => v.song_id);
-
-        const songDetails = await prisma.song.findMany({
-            where: {
-                song_id: { in: songIds }
-            },
+        const suggestions = await prisma.song_suggestion.findMany({
             select: {
                 song_id: true,
-                song_title: true,
-                genre: true,
-                aiProfile: {
+                score: true,
+                rank: true,
+                song: {
                     select: {
-                        language: true,
-                        mood: true,
-                        energy_level: true,
-                        vibe_tags: true
+                        song_id: true,
+                        song_title: true,
+                        genre: true,
+                        aiProfile: {
+                            select: {
+                                language: true,
+                                mood: true,
+                                energy_level: true,
+                                vibe_tags: true
+                            }
+                        }
                     }
                 }
             }
         });
 
+        if (!suggestions?.length) {
+            console.log("song base suggestions not found...")
 
+            return;
+        }
+
+        let index = 1;
+
+        for (const s of suggestions) {
+            if (!s.song_id) {
+                continue;
+            }
+            songIdMap.set(index++, {
+                song_id: s.song_id,
+                baseScore: s.score
+            });
+        }
 
         const candidateText = Array.from(songIdMap.entries())
             .map(([idx, meta]) => {
-                const song = songDetails.find(s => s.song_id === meta.song_id);// fix here <<==----==
-                if (!song) return null;
+                const item = suggestions.find(s => s.song_id === meta.song_id);// fix here <<==----==
+                if (!item) return null;
 
                 return `
                 ${idx}.
-                    song_title: ${song.song_title ?? "NA"}
+                    song_title: ${item.song.song_title ?? "NA"}
                     base_score: ${meta.baseScore}
-                    genre: ${song.genre ?? "NA"}
-                    mood: ${song.aiProfile?.mood ?? "NA"}
-                    energy: ${song.aiProfile?.energy_level ?? "NA"}
-                    language: ${song.aiProfile?.language ?? "NA"}
-                    tags: ${song.aiProfile?.vibe_tags?.join(",") ?? "NA"}`;
+                    genre: ${item.song.genre ?? "NA"}
+                    mood: ${item.song.aiProfile?.mood ?? "NA"}
+                    energy: ${item.song.aiProfile?.energy_level ?? "NA"}
+                    language: ${item.song.aiProfile?.language ?? "NA"}
+                    tags: ${item.song.aiProfile?.vibe_tags?.join(",") ?? "NA"}`;
             })
             .filter(Boolean)
             .join("\n");
 
 
-        const aiResponse = await aiResponseRecommendations(summary, candidateText);
+        const aiResponse = await geminiAiResponseRecommendations(summary, candidateText);
 
         if (!aiResponse) {
             console.log("no response from ai to update recommendation");

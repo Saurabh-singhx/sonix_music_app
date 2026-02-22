@@ -282,7 +282,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 
 export const createGuest = (req: Request, res: Response) => {
 
-    console.log(req.ip);
+    // console.log(req.ip);
     try {
 
         //will add features in future

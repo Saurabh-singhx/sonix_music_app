@@ -33,6 +33,7 @@ model User {
   tasteSummaries  UserTasteSummary[]
   recommendations Recommendation[]
   preferences     UserPreference[]
+  admin           Admin?
 }
 
 model Artist {
@@ -56,13 +57,12 @@ model Song {
   song_id     String  @id @default(uuid()) @db.Uuid
   song_title  String  @db.VarChar(200)
   song_url    String   @unique
-  artist_name String? @db.VarChar(50) 
 
   artist_id String? @db.Uuid
   artist    Artist? @relation(fields: [artist_id], references: [artist_id], onDelete: SetNull)
 
   album_name       String?   @db.VarChar(50)
-  duration         Int
+  size             Int
   genre            String?   @db.VarChar(30)
   release_date     DateTime?
   cover_image_url  String    @default("")
@@ -74,8 +74,8 @@ model Song {
   songEvents      UserSongEvent[]
   aiProfile       SongAIProfile?
   recommendations Recommendation[]
-  trending TrendingSong?
-
+  trending        TrendingSongs[]
+  suggestion      Song_suggestion[]
 }
 
 model Playlist {
@@ -188,7 +188,7 @@ model UserPreference {
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
-model TrendingSong {
+model TrendingSongs {
   song_id    String   @id @db.Uuid
   score      Int
   rank       Int
@@ -197,4 +197,20 @@ model TrendingSong {
   song Song @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
 
   @@index([rank])
+}
+
+model Song_suggestion {
+  song_id    String   @id @db.Uuid
+  score      Int
+  rank       Int
+  updated_at DateTime @updatedAt
+
+  song Song @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
+}
+
+model Admin {
+  user_id   String   @id @db.Uuid
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }

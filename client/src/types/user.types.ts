@@ -6,7 +6,7 @@ export interface song{
     artist:artist,
     cover_image_url:string,
     release_date:string,
-    duration:number
+    size:number
 }
 
 interface artist{

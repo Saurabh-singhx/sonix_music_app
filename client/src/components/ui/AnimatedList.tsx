@@ -212,7 +212,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
                 {/* Duration / Options */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {formatFileSize(track.duration)}
+                    {formatFileSize(track.size)}
                   </span>
                   {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal className="w-4 h-4" />

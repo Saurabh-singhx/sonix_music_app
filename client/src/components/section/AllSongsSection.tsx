@@ -84,11 +84,11 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
                                 </div>
 
                                 <div className="hidden md:block text-sm text-zinc-500 truncate">
-                                    {song.duration}
+                                    {song.size}
                                 </div>
 
                                 <div className="text-right text-sm text-zinc-500 font-mono">
-                                    {song.duration}
+                                    {song.size}
                                 </div>
                             </motion.div>
                         );

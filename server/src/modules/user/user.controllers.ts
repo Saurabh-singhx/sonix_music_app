@@ -25,7 +25,7 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
         song_url: true,
         cover_image_url: true,
         release_date: true,
-        duration: true,
+        size: true,
         artist: {
           select: {
             artist_id: true,
@@ -112,7 +112,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
             song_url: true,
             cover_image_url: true,
             release_date: true,
-            duration: true,
+            size: true,
             artist: {
               select: {
                 artist_id: true,
@@ -147,7 +147,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
 export const getTrendingSongs = async (req: Request, res: Response) => {
 
   try {
-    const trendingSongs = await prisma.trendingSong.findMany({
+    const trendingSongs = await prisma.trendingSongs.findMany({
       take: 10,
       orderBy: {
         rank: "asc"
@@ -162,7 +162,7 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
             song_url: true,
             cover_image_url: true,
             release_date: true,
-            duration: true,
+            size: true,
             artist: {
               select: {
                 artist_id: true,
@@ -347,7 +347,7 @@ export const getPlaylistsSongs = async (req: Request, res: Response) => {
             song_url: true,
             cover_image_url: true,
             release_date: true,
-            duration: true,
+            size: true,
             artist: {
               select: {
                 artist_id: true,
@@ -408,7 +408,7 @@ export const getArtists = async (req: Request, res: Response) => {
       })
     )
 
-    res.status(200).json({ message: "artists details fetched successfully", artists:artistWithProficUrl })
+    res.status(200).json({ message: "artists details fetched successfully", artists: artistWithProficUrl })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -451,7 +451,7 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
         song_url: true,
         cover_image_url: true,
         release_date: true,
-        duration: true,
+        size: true,
         artist: {
           select: {
             artist_id: true,
@@ -492,6 +492,7 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
           play_duration: PlayedDuration
         }
       });
+
       return res.sendStatus(204);
     }
 
@@ -538,7 +539,14 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
       });
     }
 
-    await redisClient.set(`${user.user_id}:${song.song_id}`, 1, { expiration: { type: "EX", value: 50 } })
+    if (PlayedDuration > 20) {
+      const count = await redisClient.incr(`songevents:${user.user_id}`)
+      // if (count === 1) {
+      //   await redisClient.expire(`songevents:${user.user_id}`, 86400)
+      // }
+    }
+
+    await redisClient.set(`${user.user_id}:${song.song_id}`, 1, { expiration: { type: "EX", value: 86400 } })
 
     res.sendStatus(204);
   } catch (error) {

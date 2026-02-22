@@ -132,9 +132,8 @@ export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Respon
             data: {
                 song_url,
                 song_title,
-                artist_name: artist.artist_name,
                 artist_id,
-                duration,
+                size:duration,
                 genre,
                 release_date: releaseDate,
                 cover_image_url,

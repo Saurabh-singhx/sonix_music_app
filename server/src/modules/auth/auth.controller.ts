@@ -7,6 +7,7 @@ import { Request, Response } from "express";
 import { authUser, LoginBody, SignupBody } from "../../types/request/auth.js";
 import { StoredOtp } from "../../types/redis/otp.js";
 import { error } from "node:console";
+import { recommendationQueue } from "../../queues/recommendation.queue.js";
 
 export const signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
 
@@ -238,9 +239,23 @@ export const logout = async (req: Request, res: Response) => {
 
 export const checkAuth = async (req: Request, res: Response) => {
 
-    const user = req.user;
+    const user = req.user as authUser;
     try {
 
+        const loggedInUserkey = `loggedInUser:${user.user_id}`
+
+        const checkRedisUser = await redisClient.get(loggedInUserkey);
+
+        if (!checkRedisUser) {
+            const eventKey = `songevents:${user.user_id}`;
+            await redisClient.set(loggedInUserkey, 1, { expiration: { type: "EX", value: 900 } }); 
+            const checkEventCount = await redisClient.get(eventKey); //race condition learn & fix <<==----==
+            const value = Number(checkEventCount);
+            if (checkEventCount && value > 0 && value % 20 === 0) {
+                await recommendationQueue.add("update-recommendation",{userId:user.user_id},{jobId:`recommended:${user.user_id}:${checkEventCount}`})
+            }
+
+        }
         res.status(200).json({
             userData: user
         })

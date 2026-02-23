@@ -16,28 +16,25 @@ export const geminiAiResponseRecommendations = async (
     console.log("songDataDetails not found");
     return null;
   }
-  console.log(songDataDetails)
   try {
     const prompt = `
-You are a music recommendation engine.
-Return ONLY valid JSON.
+          You are a music recommendation engine.
+            Return ONLY valid JSON.
 
-USER LISTENING SUMMARY:
-${summary}
+          USER LISTENING SUMMARY:
+        ${summary}
 
-CANDIDATE SONGS:
-${songDataDetails}
+        CANDIDATE SONGS:
+        ${songDataDetails}
 
-Return JSON in this format:
-[
-  {
-    "song_title": "string",
-    "song_index": number,
-    "score": number,
-    "reason": "short explanation"
-  }
-]
-`;
+        Return JSON in this format:
+      [
+        {
+          "song_title": "string",
+          "song_index": number,
+          "score": number,
+          "reason": "short explanation"
+        }`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash", // ✅ real, supported model

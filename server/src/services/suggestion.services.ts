@@ -51,7 +51,6 @@ export const calculateSongSuggestion = async () => {
         prev + row._count._all * LIKE_SCORE
       );
     }
-
     // Sort & limit ==----==>
     const suggestion = [...scoreMap.entries()]
       .map(([songId, score]) => ({ songId, score }))
@@ -60,7 +59,7 @@ export const calculateSongSuggestion = async () => {
       .slice(0, SUGGESTION_LIMIT);
 
 
-    if (suggestion.length >= 10) {
+    if (suggestion.length) { 
 
       await prisma.$transaction([
         prisma.song_suggestion.deleteMany(),

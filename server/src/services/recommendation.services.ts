@@ -1,6 +1,8 @@
 import prisma from "../lib/prisma.js";
 import { SongEventType } from "../generated/prisma/client.js";
 import { geminiAiResponseRecommendations } from "./gemini.services.js";
+import redisClient from "../config/redis.js";
+import { recommendationQueue } from "../queues/recommendation.queue.js";
 
 
 const EVENT_WEIGHT: Partial<Record<SongEventType, number>> = {
@@ -250,9 +252,7 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
         });
 
         if (!suggestions?.length) {
-            console.log("song base suggestions not found...")
-
-            return;
+            throw new Error("song suggestions not found")
         }
 
         let index = 1;
@@ -266,10 +266,13 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
                 baseScore: s.score
             });
         }
+        const suggestionMap = new Map(
+            suggestions.map(s => [s.song_id, s])
+        );
 
         const candidateText = Array.from(songIdMap.entries())
             .map(([idx, meta]) => {
-                const item = suggestions.find(s => s.song_id === meta.song_id);// fix here <<==----==
+                const item = suggestionMap.get(meta.song_id);// fix here <<==----==
                 if (!item) return null;
 
                 return `
@@ -316,8 +319,7 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
         }
 
         if (newSongAiResponse.length === 0) {
-            console.log("newSongAiResponse is empty")
-            return;
+            throw new Error("no response from ai")
         }
 
 
@@ -351,6 +353,22 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
 }
 
 
+export const verifyAddRecommendationQueue = async (userId: string) => {
+    const eventKey = `songevents:${userId}`;
+    const coolDownKey = `recommendation-cooldown:${userId}`
+    try {
+        const count = await redisClient.incr(eventKey)
+        if (count > 20) {
+            const isTriggered = await redisClient.set(coolDownKey, 1, { expiration: { type: "EX", value: 900 }, condition: "NX" });
+            if (isTriggered) {
+                await recommendationQueue.add("update-recommendation", { userId: userId }, { jobId: `recommended-${userId}` });
+                await redisClient.del(eventKey);
+            }
+        }
+    } catch (error) {
+        console.log("error while add recommendation-job in queue", error)
+    }
+}
 
 // ================= RECOMMENDATION SYSTEM IMPROVEMENTS =================
 

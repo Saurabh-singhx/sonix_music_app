@@ -5,15 +5,30 @@ import { ChevronLeft, ChevronRight, Heart, MoreHorizontal, Play } from "lucide-r
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-export const RecommendedSection = () => {
+interface RecommendedSectionProps {
+  progress: number;
+}
+
+
+export const RecommendedSection: React.FC<RecommendedSectionProps> = ({ progress }) => {
   const navigate = useNavigate();
-  const { setCurrent } = usePlayerStore();
+  const { setQueue, currentTrack } = usePlayerStore();
   const { recommendedSongs } = useUserStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleNavigate = () => {
+    setQueue(recommendedSongs);
     navigate("/recommended");
   };
+
+  const handleSongPLay = (index: number) => {
+
+    if (currentTrack) {
+      setQueue(recommendedSongs, index, progress);
+    } else {
+      setQueue(recommendedSongs, index);
+    }
+  }
 
   return (
     <section className="mb-12 group/section">
@@ -22,7 +37,7 @@ export const RecommendedSection = () => {
           <Heart className="w-6 h-6 text-white" />
           <h2 className="text-2xl font-bold tracking-tighter text-white">RECOMMENDED FOR YOU</h2>
         </div>
-        
+
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Navigation Arrows - Hidden on mobile, visible on sm+ */}
           <div className="hidden sm:flex gap-2">
@@ -65,7 +80,7 @@ export const RecommendedSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className="min-w-55 snap-start cursor-pointer group"
-              onClick={() => setCurrent(song)}
+              onClick={() => handleSongPLay(index)}
             >
               <div className="relative aspect-square rounded-2xl overflow-hidden mb-4 shadow-lg bg-zinc-900">
                 <img

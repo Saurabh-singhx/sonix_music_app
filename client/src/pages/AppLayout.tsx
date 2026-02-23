@@ -6,14 +6,15 @@ import { useGlobalPlayer } from "@/hooks/usePlayer"
 import { useAuthStore } from "@/store/auth/auth.store"
 import { useUserStore } from "@/store/user/user.store"
 import { useCallback, useEffect, useState } from "react"
-import { Outlet} from "react-router-dom"
+import { Outlet } from "react-router-dom"
 
 const AppLayout = () => {
 
     const { playing, progress, toggle, next, prev, currentTrack, duration, seek, currentTime } = useGlobalPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
-    const {isLimitReached,setisLimitReached,getRecentSongs, getArtistList, getRecommendedSongs, getTrendingSongs,} = useUserStore()
-    const {logout} = useAuthStore();
+    const { isLimitReached, setisLimitReached, getRecentSongs, getArtistList, getRecommendedSongs, getTrendingSongs, } = useUserStore()
+    const { authUser } = useAuthStore();
+    const { logout } = useAuthStore();
     // const [songsDataLimit, setSongsDataLimit] = useState(10)
     const handleSeek = useCallback(
         (value: number) => {
@@ -24,20 +25,20 @@ const AppLayout = () => {
         [duration, seek]
     );
 
-    const handleCreateAccount =() =>{
+    const handleCreateAccount = () => {
         logout();
     }
 
     useEffect(() => {
-    getRecentSongs(10);
-    getArtistList();
-    getRecommendedSongs(10);
-    getTrendingSongs();
-  }, [])
+        getRecentSongs(10);
+        getArtistList();
+        getRecommendedSongs(10);
+        getTrendingSongs();
+    }, [])
 
     return (
         <>
-            <Navbar />
+            {authUser?.role !== "ADMIN" && (<Navbar />)}
             <Outlet context={{ playing, progress, duration, currentTime }} />
             <BottomPlayer
                 isPlaying={playing}

@@ -1,5 +1,6 @@
 
 export interface song{
+    isLiked:boolean;
     song_id:string,
     song_title:string,
     song_url:string,

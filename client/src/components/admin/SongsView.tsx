@@ -161,40 +161,35 @@ const SongsView = () => {
       return;
     }
 
-    try {
-      await songDataUpdate({
-        song_title: formData.title,
-        artist_id: formData.artistId,
-        duration: trackFile!.size,
-        genre: formData.genre,
-        release_date: formData.releaseDate,
-        tags: formData.tags,
-        mood: formData.mood,
-        energy_level: formData.energyLevel,
-        language: formData.language
-      }, trackFile!, coverImage!);
+    await songDataUpdate({
+      song_title: formData.title,
+      artist_id: formData.artistId,
+      duration: trackFile!.size,
+      genre: formData.genre,
+      release_date: formData.releaseDate,
+      tags: formData.tags,
+      mood: formData.mood,
+      energy_level: formData.energyLevel,
+      language: formData.language
+    }, trackFile!, coverImage!);
 
-      // Reset form
-      setTrackFile(null);
-      setCoverImage(null);
-      setCoverPreview(null);
-      setFormData({
-        title: '',
-        artistName: '',
-        artistId: '',
-        genre: '',
-        releaseDate: '',
-        tags: '',
-        mood: '',
-        energyLevel: '',
-        language: '',
-      });
-      setErrors({});
-      setTouched({});
-      toast.success('Track uploaded successfully!');
-    } catch (error) {
-      toast.error('Failed to upload track');
-    }
+    // Reset form
+    setTrackFile(null);
+    setCoverImage(null);
+    setCoverPreview(null);
+    setFormData({
+      title: '',
+      artistName: '',
+      artistId: '',
+      genre: '',
+      releaseDate: '',
+      tags: '',
+      mood: '',
+      energyLevel: '',
+      language: '',
+    });
+    setErrors({});
+    setTouched({});
   };
 
   const handleArtistData = async () => {

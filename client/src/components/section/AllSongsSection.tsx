@@ -23,6 +23,7 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
     }
 
     const navigation = ()=>{
+        setQueue(recentSongs)
         navigate("/allsongs")
     }
     return (

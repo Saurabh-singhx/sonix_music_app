@@ -35,7 +35,7 @@ const menuItems = [
 
 const AdminSidebar = ({ currentView, onViewChange }: AdminSidebarProps) => {
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const {logout} = useAuthStore();
 
   const handlLogout = ()=>{

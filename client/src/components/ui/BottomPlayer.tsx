@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, ChevronUp, Volume2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePlayerStore } from '@/store/player/player.store';
 import { useGlobalPlayer } from '@/hooks/usePlayer';
@@ -109,9 +109,9 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
     const displayProgress = isDragging ? localProgress : progress;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+        <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up cursor-pointer">
             {/* Glass morphism background */}
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-xl border-t border-white/10" />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border-t border-white/10" />
             
             {/* Progress bar section */}
             <div className="relative group/progress">
@@ -189,7 +189,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                             </p>
                         </div>
 
-                        <ChevronUp className="w-5 h-5 text-gray-500 group-hover/btn:text-white transition-all duration-300 hidden sm:block group-hover/btn:-translate-y-1" />
+                        {/* <ChevronUp className="w-5 h-5 text-gray-500 group-hover/btn:text-white transition-all duration-300 hidden sm:block group-hover/btn:-translate-y-1" /> */}
                     </button>
 
                     {/* Center Controls */}

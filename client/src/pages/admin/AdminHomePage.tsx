@@ -1,6 +1,6 @@
 
 import ArtistView from "@/components/admin/ArtistView";
-import AdminSidebar from "../../components/admin/AdminSlidebar";
+import AdminSidebar from "../../components/admin/AdminSidebar";
 import { useState } from "react";
 import SongsView from "@/components/admin/SongsView";
 import AdminDashboard from "@/components/admin/AdminDashboard";

@@ -70,7 +70,9 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                     }
                 }
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
+                // console.log("recent:",res.data.songs)
             }
+            
         } catch (error) {
             let errorMessage: string = "error while getting recent added songs"
             if (error instanceof AxiosError) {
@@ -128,8 +130,8 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                         ...(recommendedNextCursor && { cursor: recommendedNextCursor })
                     }
                 })
-
-                set({ recommendedSongs: [...recommendedSongs, ...res.data?.songs] })
+                set({ recommendedSongs: [...recommendedSongs, ...res.data?.recommendedSongs] })
+                // console.log("recommended:",res.data.recommendedSongs)
             }
 
         } catch (error) {
@@ -150,12 +152,11 @@ export const useUserStore = create<userStoreT>((set, get) => ({
             if (authUser?.role === "guest") {
 
                 const res = await axiosInstance.get("/api/v1/public/trending-songs");
-                set({ trendingSongs: res.data?.songs })
+                set({ trendingSongs: res.data?.trendingSongs })
 
             } else {
                 const res = await axiosInstance.get("/api/v1/user/trending-songs");
-
-                set({ trendingSongs: res.data?.songs })
+                set({ trendingSongs: res.data?.trendingSongs })
             }
         } catch (error) {
             if(error instanceof AxiosError){

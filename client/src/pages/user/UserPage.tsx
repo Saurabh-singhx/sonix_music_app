@@ -51,7 +51,7 @@ export default function UserPage() {
 
               {
                 recommendedSongs?.length > 0 && (
-                  <RecommendedSection />
+                  <RecommendedSection progress={progress}/>
                 )
               }
               {

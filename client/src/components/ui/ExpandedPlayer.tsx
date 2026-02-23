@@ -324,9 +324,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsLiked(!isLiked)}
-                    className={`rounded-full transition-colors ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`rounded-full transition-colors ${currentTrack.isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
                   >
-                    <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                    <Heart className={`w-6 h-6 ${currentTrack.isLiked ? 'fill-current' : ''}`} />
                   </Button>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full">
                     <Share2 className="w-5 h-5" />

@@ -10,9 +10,9 @@ interface LayoutContext{
   duration:number;
 };
 
-const AllSongsPage = () => {
+const RecommendedSongsPage = () => {
 
-    const { recentSongs } = useUserStore();
+    const { recommendedSongs } = useUserStore();
     const { setCurrent} = usePlayerStore()
     const { playing,currentTime,duration} = useOutletContext<LayoutContext>();
     const handleplayer = (item: song) => {
@@ -25,7 +25,7 @@ const AllSongsPage = () => {
             <AnimatedList
                 className=""
                 itemClassName=""
-                items={recentSongs}
+                items={recommendedSongs}
                 onItemSelect={(item) => handleplayer(item)}
                 showGradients
                 enableArrowNavigation
@@ -38,4 +38,4 @@ const AllSongsPage = () => {
     )
 }
 
-export default AllSongsPage
+export default RecommendedSongsPage

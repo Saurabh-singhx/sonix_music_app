@@ -604,3 +604,24 @@ export const updateSongEventLimiter = rateLimit({
 
 });
 
+export const likedSongLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+
+  store: new RedisStore({
+    prefix: "rl:likedSong:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests..."
+    });
+  },
+
+});
+

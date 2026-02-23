@@ -12,7 +12,8 @@ import redisClient from "./config/redis.js";
 import publicRoutes from "./modules/public/public.routes.js"
 import healthCheckRoute from "./modules/health/health.routes.js"
 // import "./cron/updateTrending.js"
-// import "./cron/updateRecommendations.cron.js"
+// import "./cron/updateSuggestions.cron.js"
+// import "./workers/recommendation.worker.js"
 
 import "./config/passport.js"
 import { Server } from "http";

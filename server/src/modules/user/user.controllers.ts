@@ -4,8 +4,11 @@ import { authUser } from "../../types/request/auth.js";
 import { getFileUrl } from "../../services/s3.services.js";
 import { plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
 import redisClient from "../../config/redis.js";
+import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
+
+  const user = req.user as authUser | undefined;
   try {
     const limit = Number(req.query.limit) || 10;
     const cursor = req.query.cursor as string | undefined;
@@ -17,7 +20,7 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
         cursor: { song_id: cursor },
       }),
       orderBy: {
-        song_id: "asc",
+        song_id: "desc",
       },
       select: {
         song_id: true,
@@ -34,6 +37,16 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
             artist_profilePic: true,
           },
         },
+        ...(user && {
+          likedByUsers: {
+            where: {
+              user_id: user.user_id
+            },
+            select: {
+              user_id: true
+            }
+          }
+        })
       },
     });
 
@@ -44,8 +57,17 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
       nextCursor = nextItem!.song_id;
     }
 
+    const fixedRecentAllSongs = songs.map(song => {
+      const { likedByUsers, ...restSong } = song;
+
+      return {
+        ...restSong,
+        isLiked: likedByUsers.length > 0
+      };
+    });
+
     const songsWithUrls = await Promise.all(
-      songs.map(async (song) => {
+      fixedRecentAllSongs.map(async (song) => {
         const songUrl = await getFileUrl(song.song_url);
 
         const coverUrl = song.cover_image_url
@@ -121,6 +143,14 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
                 artist_profilePic: true,
               },
             },
+            likedByUsers: {
+              where: {
+                user_id: user.user_id
+              },
+              select: {
+                user_id: true
+              }
+            }
           },
         }
       }
@@ -134,8 +164,49 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
       nextCursor = nextItem!.id;
     }
 
+    const fixedRecommendedSongs = recommendedSongs.map(song => {
+      const { likedByUsers = [], ...restSong } = song.song;
+
+      return {
+        ...song,
+        song: {
+          ...restSong,
+          isLiked: likedByUsers.length > 0
+        }
+      };
+    });
+
+    const songsWithUrls = await Promise.all(
+      fixedRecommendedSongs.map(async (item) => {
+        const songUrl = await getFileUrl(item.song.song_url);
+
+        const coverUrl = item.song.cover_image_url
+          ? await getFileUrl(item.song.cover_image_url)
+          : null;
+
+        const artistProfilePic = item.song.artist?.artist_profilePic
+          ? await getFileUrl(item.song.artist.artist_profilePic)
+          : null;
+
+        return {
+          ...item,
+          ...item.song,
+          song_url: songUrl,
+          cover_image_url: coverUrl,
+          artist: item.song.artist
+            ? {
+              ...item.song.artist,
+              artist_profilePic: artistProfilePic,
+            }
+            : null,
+
+        };
+      })
+    );
+
+
     return res.status(200).json({
-      songs: recommendedSongs,
+      recommendedSongs: songsWithUrls,
       nextCursor,
     });
   } catch (error) {
@@ -146,6 +217,7 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
 
 export const getTrendingSongs = async (req: Request, res: Response) => {
 
+  const user = req.user as authUser | undefined;
   try {
     const trendingSongs = await prisma.trendingSongs.findMany({
       take: 10,
@@ -171,14 +243,64 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
                 artist_profilePic: true,
               },
             },
+            ...(user && {
+              likedByUsers: {
+                where: {
+                  user_id: user.user_id
+                },
+                select: {
+                  user_id: true
+                }
+              }
+            })
           },
         }
       }
 
     });
 
+    const fixedTrendingSongs = trendingSongs.map(song => {
+      const { likedByUsers, ...restSong } = song.song;
 
-    res.status(200).json({ message: "trending song fetched successfully", trendingSongs });
+      return {
+        ...song,
+        song: {
+          ...restSong,
+          isLiked: likedByUsers.length > 0
+        }
+      };
+    });
+
+    const songsWithUrls = await Promise.all(
+      fixedTrendingSongs.map(async (item) => {
+        const songUrl = await getFileUrl(item.song.song_url);
+
+        const coverUrl = item.song.cover_image_url
+          ? await getFileUrl(item.song.cover_image_url)
+          : null;
+
+        const artistProfilePic = item.song.artist?.artist_profilePic
+          ? await getFileUrl(item.song.artist.artist_profilePic)
+          : null;
+
+        return {
+          ...item,
+          ...item.song,
+          song_url: songUrl,
+          cover_image_url: coverUrl,
+          artist: item.song.artist
+            ? {
+              ...item.song.artist,
+              artist_profilePic: artistProfilePic,
+            }
+            : null,
+
+        };
+      })
+    );
+
+
+    res.status(200).json({ message: "trending song fetched successfully", trendingSongs: songsWithUrls });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -492,7 +614,7 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
           play_duration: PlayedDuration
         }
       });
-
+      await verifyAddRecommendationQueue(user.user_id)
       return res.sendStatus(204);
     }
 
@@ -540,10 +662,7 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
     }
 
     if (PlayedDuration > 20) {
-      const count = await redisClient.incr(`songevents:${user.user_id}`)
-      // if (count === 1) {
-      //   await redisClient.expire(`songevents:${user.user_id}`, 86400)
-      // }
+      await verifyAddRecommendationQueue(user.user_id)
     }
 
     await redisClient.set(`${user.user_id}:${song.song_id}`, 1, { expiration: { type: "EX", value: 86400 } })
@@ -556,3 +675,49 @@ export const updateSongEvent = async (req: Request<{}, {}, userSongEventPayload>
 
 }
 
+export const likeSong = async (req: Request, res: Response) => {
+  const { songId } = req.params;
+  const user = req.user as authUser;
+  try {
+
+    if (!songId) {
+      return res.status(400).json({ messsage: "songid not found" })
+    }
+
+    const isSongExists = await prisma.song.findUnique({
+      where: {
+        song_id: songId
+      }
+    });
+
+    if (!isSongExists) {
+      return res.status(400).json({ message: "song does not exits" })
+    }
+    const checkLiked = await prisma.likedSong.findUnique({
+      where: {
+        user_id_song_id: {
+          user_id: user.user_id,
+          song_id: songId
+        }
+      }
+    });
+
+    if (checkLiked) {
+      return res.status(204).json({ message: "already liked" })
+    }
+
+    await prisma.likedSong.create({
+      data: {
+        song_id: songId,
+        user_id: user.user_id
+      }
+    })
+
+    verifyAddRecommendationQueue(user.user_id)
+
+    return res.status(201).json({ message: "liked successfully" });
+  } catch (error) {
+    console.error("error in songeventtype", error)
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

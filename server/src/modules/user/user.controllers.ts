@@ -168,34 +168,30 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
       const { likedByUsers = [], ...restSong } = song.song;
 
       return {
-        ...song,
-        song: {
-          ...restSong,
-          isLiked: likedByUsers.length > 0
-        }
+        ...restSong,
+        isLiked: likedByUsers.length > 0
       };
     });
 
     const songsWithUrls = await Promise.all(
       fixedRecommendedSongs.map(async (item) => {
-        const songUrl = await getFileUrl(item.song.song_url);
+        const songUrl = await getFileUrl(item.song_url);
 
-        const coverUrl = item.song.cover_image_url
-          ? await getFileUrl(item.song.cover_image_url)
+        const coverUrl = item.cover_image_url
+          ? await getFileUrl(item.cover_image_url)
           : null;
 
-        const artistProfilePic = item.song.artist?.artist_profilePic
-          ? await getFileUrl(item.song.artist.artist_profilePic)
+        const artistProfilePic = item.artist?.artist_profilePic
+          ? await getFileUrl(item.artist.artist_profilePic)
           : null;
 
         return {
           ...item,
-          ...item.song,
           song_url: songUrl,
           cover_image_url: coverUrl,
-          artist: item.song.artist
+          artist: item.artist
             ? {
-              ...item.song.artist,
+              ...item.artist,
               artist_profilePic: artistProfilePic,
             }
             : null,
@@ -260,37 +256,33 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
     });
 
     const fixedTrendingSongs = trendingSongs.map(song => {
-      const { likedByUsers, ...restSong } = song.song;
+      const { likedByUsers=[], ...restSong } = song.song;
 
       return {
-        ...song,
-        song: {
-          ...restSong,
-          isLiked: likedByUsers.length > 0
-        }
+        ...restSong,
+        isLiked: likedByUsers.length > 0
       };
     });
 
     const songsWithUrls = await Promise.all(
       fixedTrendingSongs.map(async (item) => {
-        const songUrl = await getFileUrl(item.song.song_url);
+        const songUrl = await getFileUrl(item.song_url);
 
-        const coverUrl = item.song.cover_image_url
-          ? await getFileUrl(item.song.cover_image_url)
+        const coverUrl = item.cover_image_url
+          ? await getFileUrl(item.cover_image_url)
           : null;
 
-        const artistProfilePic = item.song.artist?.artist_profilePic
-          ? await getFileUrl(item.song.artist.artist_profilePic)
+        const artistProfilePic = item.artist?.artist_profilePic
+          ? await getFileUrl(item.artist.artist_profilePic)
           : null;
 
         return {
           ...item,
-          ...item.song,
           song_url: songUrl,
           cover_image_url: coverUrl,
-          artist: item.song.artist
+          artist: item.artist
             ? {
-              ...item.song.artist,
+              ...item.artist,
               artist_profilePic: artistProfilePic,
             }
             : null,

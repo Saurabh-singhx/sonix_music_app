@@ -72,7 +72,7 @@ router.get("/artistsongs",
     getArtistsSongs
 );
 
-router.post("/like-song",
+router.post("/like-song/:songId",
     likedSongLimiter,
     protectRoute,
     likeSong

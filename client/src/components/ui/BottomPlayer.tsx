@@ -14,6 +14,8 @@ interface BottomPlayerProps {
     onSeek: (value: number) => void;  // Single number, not array
     volume?: number;
     onVolumeChange?: (value: number) => void;
+    setIsSeeking: (data: boolean) => void;
+    setProgress: (data: number) => void;
 }
 
 export const BottomPlayer: React.FC<BottomPlayerProps> = ({
@@ -26,14 +28,17 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
     onSeek,
     volume = 1,
     onVolumeChange,
+    setIsSeeking,
+    setProgress
+
 }) => {
-    
+
     const { currentTrack } = usePlayerStore();
     const [isDragging, setIsDragging] = useState(false);
     const [localProgress, setLocalProgress] = useState(progress);
     const [showVolume, setShowVolume] = useState(false);
     const progressBarRef = useRef<HTMLDivElement>(null);
-    const {currentTime,duration} = useGlobalPlayer();
+    const { currentTime, duration } = useGlobalPlayer();
 
     // Sync local progress with global progress when not dragging
     useEffect(() => {
@@ -65,6 +70,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
         const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
         const newProgress = calculateProgress(clientX);
         setLocalProgress(newProgress);
+        setIsSeeking(true)
     };
 
     const handleInteractionMove = useCallback((e: MouseEvent | TouchEvent) => {
@@ -78,6 +84,8 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
         if (isDragging) {
             setIsDragging(false);
             onSeek(localProgress);
+            setIsSeeking(false)
+            setProgress(localProgress);
         }
     }, [isDragging, localProgress, onSeek]);
 
@@ -88,7 +96,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
             window.addEventListener('mouseup', handleInteractionEnd);
             window.addEventListener('touchmove', handleInteractionMove);
             window.addEventListener('touchend', handleInteractionEnd);
-            
+
             return () => {
                 window.removeEventListener('mousemove', handleInteractionMove);
                 window.removeEventListener('mouseup', handleInteractionEnd);
@@ -101,7 +109,9 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
     // Click to seek
     const handleClick = (e: React.MouseEvent) => {
         const newProgress = calculateProgress(e.clientX);
+        setIsSeeking(true)
         onSeek(newProgress);
+        setIsSeeking(false)
     };
 
     if (!currentTrack) return null;
@@ -112,7 +122,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
         <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up cursor-pointer">
             {/* Glass morphism background */}
             <div className="absolute inset-0 bg-black/40 backdrop-blur-xl border-t border-white/10" />
-            
+
             {/* Progress bar section */}
             <div className="relative group/progress">
                 {/* Time indicators - show on hover */}
@@ -122,7 +132,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                 </div>
 
                 {/* Interactive progress bar */}
-                <div 
+                <div
                     ref={progressBarRef}
                     className="h-2 bg-white/10 cursor-pointer relative overflow-hidden"
                     onClick={handleClick}
@@ -131,10 +141,10 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                 >
                     {/* Buffered progress (optional) */}
                     <div className="absolute inset-0 bg-white/5" />
-                    
+
                     {/* Current progress fill */}
-                    <div 
-                        className="h-full bg-white relative transition-all duration-75 ease-out"
+                    <div
+                        className={`h-full bg-white relative ${isDragging ? '' : 'transition-all duration-75 ease-out'}`}
                         style={{ width: `${displayProgress}%` }}
                     >
                         {/* Glow line at progress edge */}
@@ -142,7 +152,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                     </div>
 
                     {/* Draggable handle - appears on hover/drag */}
-                    <div 
+                    <div
                         className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-all duration-200 -ml-2
                             ${isDragging ? 'opacity-100 scale-100' : 'opacity-0 scale-0 group-hover/progress:opacity-100 group-hover/progress:scale-100'}
                         `}
@@ -153,7 +163,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
 
             <div className="relative container max-w-7xl mx-auto px-4">
                 <div className="flex items-center justify-between gap-4 py-3 sm:py-4">
-                    
+
                     {/* Track info - clickable to expand */}
                     <button
                         onClick={onExpand}
@@ -162,14 +172,14 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                         {/* Album art with rotation animation when playing */}
                         <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all duration-500 ${isPlaying ? 'shadow-[0_0_20px_rgba(255,255,255,0.2)]' : ''}`}>
                             <div className={`w-full h-full ${isPlaying ? 'animate-spin-slow' : ''}`} style={{ animationDuration: '8s' }}>
-                                <img 
-                                    src={currentTrack.cover_image_url} 
+                                <img
+                                    src={currentTrack.cover_image_url}
                                     alt={currentTrack.song_title}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
                             <div className="absolute inset-0 bg-linear-to-tr from-black/40 to-transparent" />
-                            
+
                             {/* Playing indicator bars */}
                             {isPlaying && (
                                 <div className="absolute bottom-1 right-1 flex gap-0.5 items-end h-3">
@@ -253,7 +263,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                                 >
                                     <Volume2 className="w-4 h-4" />
                                 </Button>
-                                
+
                                 {/* Volume slider popup */}
                                 <div className={`absolute bottom-full right-0 mb-2 p-3 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl transition-all duration-300 w-32 ${showVolume ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
                                     <div className="h-1 bg-white/20 rounded-full relative cursor-pointer group/volume-bar"

@@ -10,7 +10,7 @@ import { Outlet } from "react-router-dom"
 
 const AppLayout = () => {
 
-    const { playing, progress, toggle, next, prev, currentTrack, duration, seek, currentTime } = useGlobalPlayer();
+    const { playing, progress, toggle, next, prev, currentTrack, duration, seek, currentTime,setIsSeeking,setProgress } = useGlobalPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
     const { isLimitReached, setisLimitReached, getRecentSongs, getArtistList, getRecommendedSongs, getTrendingSongs, } = useUserStore()
     const { authUser } = useAuthStore();
@@ -49,6 +49,8 @@ const AppLayout = () => {
                 onExpand={() => setIsExpanded(true)}
                 onPrevious={() => prev(currentTrack!, Math.floor(progress))}
                 onSeek={handleSeek}
+                setIsSeeking={setIsSeeking}
+                setProgress={setProgress}
             />
 
             <ExpandedPlayer
@@ -62,6 +64,8 @@ const AppLayout = () => {
                 duration={duration}
                 currentTime={currentTime}
                 playing={playing}
+                setIsSeeking={setIsSeeking}
+                setProgress={setProgress}
             />
 
             <LimitReachedModal

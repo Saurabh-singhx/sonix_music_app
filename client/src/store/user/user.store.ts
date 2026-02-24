@@ -21,6 +21,8 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     AllSongs:[],
     artists:[],
     isLimitReached:false,
+    isLikingSong:false,
+    likedSongsId:[],
 
     getRecentSongs: async (limit) => {
 
@@ -110,7 +112,7 @@ export const useUserStore = create<userStoreT>((set, get) => ({
         try {
             await axiosInstance.post("/api/v1/user/song-event", { songId: currentTrack.song_id, duration })
         } catch (error) {
-            console.error(error)
+            // console.error(error)
         }
     },
 
@@ -219,5 +221,48 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
     setisLimitReached:(value)=>{
         set({isLimitReached:value})
+    },
+
+    setSongLike:async(songId)=>{
+
+        set({isLikingSong:true});
+        const {likedSongsId} = get();
+        try {
+            const res = await axiosInstance.post(`/api/v1/user/like-song/${songId}`)
+            // toast.success(res.data.message);
+            if(res.status === 201){
+                set({likedSongsId:[songId,...likedSongsId]})
+            }
+            return res.status;
+        } catch (error) {
+           
+        }finally{
+            set({isLikingSong:false})
+        }
+    },
+
+    checkSongLiked:(songId:string)=>{
+        const{likedSongsId} = get();
+        for(const s of likedSongsId){
+            if(s === songId){
+                return true;
+            }
+            break;
+        }
+        return false;
+    },
+    cleanupAfterLogoutUser:()=>{
+        set({nextCursor:null,
+            likedSongsId:[],
+            recentlyPlayedSongs:[],
+            recentSongs:[],
+            recommendedNextCursor:null,
+            recommendedSongs:[],
+            trendingSongs:[],
+            AllSongs:[],
+            artists:[],
+        })
     }
+
+
 }));

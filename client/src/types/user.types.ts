@@ -31,6 +31,8 @@ export interface userStoreT {
     artists:artist[];
     AllSongs:song[];
     isLimitReached:boolean;
+    isLikingSong:boolean;
+    likedSongsId:string[];
 
     getRecentSongs: (limit:number | null) => Promise<void>;
     updateSongEvent:(currentTrack:song,duration:number)=> Promise<void>;
@@ -38,4 +40,7 @@ export interface userStoreT {
     getTrendingSongs:() =>Promise<void>;
     getArtistList:()=>Promise<void>;
     setisLimitReached:(value:boolean)=>void;
+    setSongLike:(songId:string)=>Promise<number|undefined>;
+    checkSongLiked:(songId:string)=>boolean;
+    cleanupAfterLogoutUser:()=>void;
 }

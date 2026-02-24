@@ -68,6 +68,7 @@ export const useAuthStore = create<AuthStoreT>((set,get) => ({
             }
             await axiosInstance.post("/api/v1/auth/logout");
             useAdminStore.getState().cleanAfterLogOut();
+            useUserStore.getState().cleanupAfterLogoutUser();
             set({ authUser: null })
         } catch (error) {
              let errorMessage: string = "logout failed try again later"

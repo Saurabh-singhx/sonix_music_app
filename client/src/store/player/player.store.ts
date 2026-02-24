@@ -8,14 +8,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
   currentSongindex: 0,
 
-  setQueue: (songs, startIndex, duration) => {
+  setQueue: (songs, startIndex=undefined, duration) => {
+    
     const { currentTrack } = get();
     const { currentSongindex } = get();
     if (duration && currentTrack && (currentSongindex !== startIndex)) {
       useUserStore.getState().updateSongEvent(currentTrack, duration);
     }
 
-    if (startIndex) {
+    if (startIndex !== undefined) {
       set({
         queue: songs,
         currentSongindex: startIndex,
@@ -51,7 +52,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   next: (currentTrack, duration) => {
     const { queue, currentSongindex } = get();
-    const nextIndex = currentSongindex + 1;
+    const nextIndex = (currentSongindex || 0) + 1;
     if (!queue[nextIndex]) return;
     set({
       currentSongindex: nextIndex,
@@ -64,7 +65,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   prev: (currentTrack, duration) => {
     const { queue, currentSongindex } = get();
-    const prevIndex = currentSongindex - 1;
+    const prevIndex = (currentSongindex || 0) - 1;
     if (!queue[prevIndex]) return;
     set({
       currentSongindex: prevIndex,

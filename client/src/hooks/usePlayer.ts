@@ -11,6 +11,7 @@ export function useGlobalPlayer() {
   const [currentTime, setCurrentTime] = useState('0:00');
   const [position, setPosition] = useState(0)
   const prevUrlRef = useRef<string | null>(null);
+  const [isSeeking, setIsSeeking] = useState(false);
   // Load song
   useEffect(() => {
     if (!currentTrack?.song_url) return;
@@ -28,7 +29,6 @@ export function useGlobalPlayer() {
         );
 
         if (Number.isNaN(percent)) return;
-        console.log(percent)
         next(currentTrack, percent);
       },
 
@@ -38,16 +38,18 @@ export function useGlobalPlayer() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (player.isPlaying) {
+      if (player.isPlaying && !isSeeking) {
         setPosition(player.getPosition());
       }
     }, 200);
 
     return () => clearInterval(interval);
-  }, [player.isPlaying]);
+  }, [player.isPlaying, isSeeking]);
 
 
   useEffect(() => {
+    if (!player.duration) return;
+
     const progressValue = (position / player.duration) * 100;
     setProgress(progressValue);
 
@@ -65,6 +67,8 @@ export function useGlobalPlayer() {
     duration: player.duration,
     progress,
     currentTime,
+    setIsSeeking,
+    setProgress,
 
     /* controls */
     play: player.play,
@@ -75,6 +79,7 @@ export function useGlobalPlayer() {
     setVolume: player.setVolume,
     mute: player.mute,
     unmute: player.unmute,
+    valume: player.volume,
 
     /* navigation */
     next,

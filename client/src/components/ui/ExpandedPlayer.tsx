@@ -15,11 +15,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Sheet, SheetContent } from './SheetVariants';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './SheetVariants';
 import { ScrollArea } from './ScrollArea';
 import type { Variants, Transition } from 'framer-motion';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@/store/player/player.store';
+import { useUserStore } from '@/store/user/user.store';
 
 interface ExpandedPlayerProps {
   isOpen: boolean;
@@ -28,10 +29,12 @@ interface ExpandedPlayerProps {
   onNext: () => void;
   onPrevious: () => void;
   onSeek: (value: number) => void;
-  progress:number;
-  duration:number;
-  currentTime:string;
-  playing:boolean;
+  progress: number;
+  duration: number;
+  currentTime: string;
+  playing: boolean;
+  setIsSeeking: (data:boolean) => void;
+  setProgress: (data:number) => void;
 }
 
 // FIX: Explicitly type the transition to satisfy TypeScript
@@ -82,7 +85,7 @@ const queueVariants: Variants = {
     }
   }
 };
-
+// DialogContent
 
 export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   isOpen,
@@ -94,13 +97,16 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   currentTime,
   playing,
   progress,
-  duration
+  duration,
+  setIsSeeking,
+  setProgress
+
 }) => {
   const [showQueue, setShowQueue] = useState(false);
   const [volume, setVolume] = useState([80]);
   const [isLiked, setIsLiked] = useState(false);
   const { queue, setCurrent, currentTrack, currentSongindex } = usePlayerStore();
-
+  const { setSongLike, checkSongLiked } = useUserStore()
   // Handle responsive queue visibility
   const [isMobile, setIsMobile] = useState(false);
 
@@ -111,6 +117,17 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (currentTrack) {
+      setIsLiked(currentTrack?.isLiked);
+      const check = checkSongLiked(currentTrack?.song_id);
+      if (check) {
+        setIsLiked(true)
+      }
+    }
+
+  }, [currentTrack]);
+
   if (!currentTrack) return null;
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -119,12 +136,27 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleSongLike = async () => {
+    const songId = currentTrack.song_id;
+    if (!currentTrack.isLiked && !isLiked) {
+      const res = await setSongLike(songId)
+      if (res === 201) {
+        setIsLiked(true)
+      }
+    }
+  }
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="bottom"
         className="h-screen p-0 bg-background/95 backdrop-blur-xl border-none rounded-none overflow-hidden"
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Now Playing</SheetTitle>
+          <SheetDescription>
+            Full screen music player with playback controls and queue list
+          </SheetDescription>
+        </SheetHeader>
         {/* Background Ambient Glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]" />
@@ -265,7 +297,15 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   value={[progress]}
                   max={100}
                   step={0.1}
-                  onValueChange={(val) => onSeek(val[0])}
+                  onValueChange={(val) => {
+                    setIsSeeking(true);
+                    setProgress(val[0]); // just update UI
+                  }}
+                  onValueCommit={(val) => {
+                    const newTime = (val[0]);
+                    onSeek(newTime);
+                    setIsSeeking(false);
+                  }}
                   className="cursor-pointer"
                 />
                 <div className="flex justify-between text-xs font-medium text-muted-foreground tabular-nums">
@@ -323,10 +363,10 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsLiked(!isLiked)}
-                    className={`rounded-full transition-colors ${currentTrack.isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
+                    onClick={handleSongLike}
+                    className={`rounded-full transition-colors ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
                   >
-                    <Heart className={`w-6 h-6 ${currentTrack.isLiked ? 'fill-current' : ''}`} />
+                    <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
                   </Button>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full">
                     <Share2 className="w-5 h-5" />
@@ -381,90 +421,94 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
                   </div>
 
                   <ScrollArea className="flex-1 px-4 py-2">
-                    <div className="space-y-1">
-                      {queue?.map((track, index) => {
-                        const isActive = currentSongindex === index;
-                        return (
-                          <motion.button
-                            key={track.song_id}
-                            layout
-                            onClick={() => {
-                              if (currentTrack) {
-                                setCurrent(track, progress);
-                              } else {
-                                setCurrent(track)
-                              }
+                    {queue?.map((track, index) => {
+                      const isActive = currentSongindex === index;
 
-                              if (isMobile) setShowQueue(false);
-                            }}
-                            className={`
-                              w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden
-                              ${isActive
-                                ? 'bg-primary/10 border border-primary/20'
-                                : 'hover:bg-accent/50 border border-transparent'
-                              }
-                            `}
-                          >
-                            {/* Active Indicator Bar */}
-                            {isActive && (
-                              <motion.div
-                                layoutId="activeIndicator"
-                                className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
-                              />
+                      const handleTrackClick = () => {
+                        if (currentTrack) {
+                          setCurrent(track, progress);
+                        } else {
+                          setCurrent(track);
+                        }
+                        if (isMobile) setShowQueue(false);
+                      };
+
+                      return (
+                        <motion.div
+                          key={track.song_id}
+                          layout
+                          onClick={handleTrackClick}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTrackClick();
+                            }
+                          }}
+                          className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden cursor-pointer
+                            ${isActive
+                              ? 'bg-primary/10 border border-primary/20'
+                              : 'hover:bg-accent/50 border border-transparent'
+                            }`}
+                        >
+                          {/* Active Indicator Bar */}
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeIndicator"
+                              className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
+                            />
+                          )}
+
+                          {/* Track Number / Visualizer */}
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-medium text-sm
+                            ${isActive
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground group-hover:bg-background'
+                            }`}>
+                            {isActive && playing ? (
+                              <div className="flex gap-0.5 items-end h-4">
+                                {[1, 2, 3].map(i => (
+                                  <motion.div
+                                    key={i}
+                                    animate={{ height: [4, 16, 8, 16, 4] }}
+                                    transition={{
+                                      duration: 0.5,
+                                      repeat: Infinity,
+                                      delay: i * 0.1,
+                                      ease: "easeInOut"
+                                    }}
+                                    className="w-1 bg-current rounded-full"
+                                  />
+                                ))}
+                              </div>
+                            ) : (
+                              <span>{index + 1}</span>
                             )}
+                          </div>
 
-                            {/* Track Number / Visualizer */}
-                            <div className={`
-                              w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-medium text-sm
-                              ${isActive
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground group-hover:bg-background'
-                              }
-                            `}>
-                              {isActive && playing ? (
-                                <div className="flex gap-0.5 items-end h-4">
-                                  {[1, 2, 3].map(i => (
-                                    <motion.div
-                                      key={i}
-                                      animate={{ height: [4, 16, 8, 16, 4] }}
-                                      transition={{
-                                        duration: 0.5,
-                                        repeat: Infinity,
-                                        delay: i * 0.1,
-                                        ease: "easeInOut"
-                                      }}
-                                      className="w-1 bg-current rounded-full"
-                                    />
-                                  ))}
-                                </div>
-                              ) : (
-                                <span>{index + 1}</span>
-                              )}
-                            </div>
+                          {/* Track Details */}
+                          <div className="min-w-0 flex-1">
+                            <p className={`font-semibold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                              {track.song_title}
+                            </p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {track.artist.artist_name}
+                            </p>
+                          </div>
 
-                            {/* Track Details */}
-                            <div className="min-w-0 flex-1">
-                              <p className={`font-semibold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
-                                {track.song_title}
-                              </p>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {track.artist.artist_name}
-                              </p>
-                            </div>
-
-                            {/* Duration / Options */}
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground tabular-nums">
-                                {track.size || '0:00'}
-                              </span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
+                          {/* Duration / Options - stop propagation here */}
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                              {track.size || '0:00'}
+                            </span>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </ScrollArea>
                 </motion.div>
               )}

@@ -4,7 +4,7 @@ import { authUser } from "./request/auth.ts";
 declare global {
   namespace Express {
     interface Request {
-      user:authUser,
+      user?:authUser,
       cookies: {
         jwtauth?: string;
       };

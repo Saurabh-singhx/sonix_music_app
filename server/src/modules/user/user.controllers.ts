@@ -58,7 +58,7 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
     }
 
     const fixedRecentAllSongs = songs.map(song => {
-      const { likedByUsers, ...restSong } = song;
+      const { likedByUsers=[], ...restSong } = song;
 
       return {
         ...restSong,

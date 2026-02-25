@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/user/user.store";
 import { Disc, Play } from "lucide-react";
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom";
+import { formatFileSize, formattedDate } from "@/helpers/user.helpers";
 
 interface AllSongsPageProps{
     progress:number,
@@ -42,8 +43,8 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
                 <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 text-xs text-zinc-500 uppercase tracking-wider border-b border-zinc-800 font-medium">
                     <div className="w-8 text-center">#</div>
                     <div>Title</div>
-                    <div className="hidden md:block">Album</div>
-                    <div className="text-right">Time</div>
+                    <div className="hidden md:block">Size</div>
+                    <div className="text-right">Release Date</div>
                 </div>
 
                 <div className="flex flex-col">
@@ -85,11 +86,11 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
                                 </div>
 
                                 <div className="hidden md:block text-sm text-zinc-500 truncate">
-                                    {song.size}
+                                    {formatFileSize(song.size)}
                                 </div>
 
                                 <div className="text-right text-sm text-zinc-500 font-mono">
-                                    {song.size}
+                                    {formattedDate(song.release_date)}
                                 </div>
                             </motion.div>
                         );

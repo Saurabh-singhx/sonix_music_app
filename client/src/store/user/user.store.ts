@@ -93,6 +93,7 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
     updateSongEvent: async (currentTrack, duration) => {
         const { recentlyPlayedSongs } = get();
+        const {authUser} = useAuthStore.getState();
 
         for (let i = recentlyPlayedSongs.length - 1; i >= 0; i--) {
             if (currentTrack.song_id === recentlyPlayedSongs[i].song_id) {
@@ -110,7 +111,9 @@ export const useUserStore = create<userStoreT>((set, get) => ({
         set({ recentlyPlayedSongs: [currentTrack, ...recentlyPlayedSongs] })
 
         try {
-            await axiosInstance.post("/api/v1/user/song-event", { songId: currentTrack.song_id, duration })
+            if(authUser?.role !== "guest"){
+                await axiosInstance.post("/api/v1/user/song-event", { songId: currentTrack.song_id, duration })
+            }
         } catch (error) {
             // console.error(error)
         }

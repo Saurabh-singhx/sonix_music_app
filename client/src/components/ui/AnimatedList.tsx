@@ -4,6 +4,7 @@ import { motion, useInView } from 'motion/react';
 import './AnimatedList.css';
 import type { song } from "@/types/user.types";
 import { usePlayerStore } from "@/store/player/player.store";
+import { formattedDate } from "@/helpers/user.helpers";
 
 interface AnimatedItemProps {
   children: ReactNode;
@@ -129,10 +130,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     setKeyboardNav(false);
   }, [selectedIndex, keyboardNav]);
 
-  function formatFileSize(bytes: number) {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(2)} MB`;
-  }
+  
 
   return (
     <div className={`scroll-list-container ${className}`}>
@@ -212,7 +210,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
                 {/* Duration / Options */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {formatFileSize(track.size)}
+                    {formattedDate(track.release_date)}
                   </span>
                   {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal className="w-4 h-4" />

@@ -120,13 +120,7 @@ export default function ArtistProfilePage() {
         <div className="min-h-screen bg-black text-white font-sans selection:bg-white/20 selection:text-white flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
 
             {/* Background Ambience */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-neutral-800/30 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-neutral-800/20 rounded-full blur-[120px]" />
-                {/* Grid Pattern */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
-            </div>
+            
 
             {/* Main Card Container - Full Width, 20-30% Height */}
             <div className="w-full z-10">

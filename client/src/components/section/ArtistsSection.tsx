@@ -1,9 +1,17 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import { useUserStore } from '@/store/user/user.store';
+import type { artist } from '@/types/user.types';
+import { useNavigate } from 'react-router-dom';
 
 export const ArtistsSection: React.FC = () => {
-  const { artists } = useUserStore();
+  const navigate = useNavigate();
+  const { artists,setCurrentArtist } = useUserStore();
+
+  const handleArtistPageRedirect = (artist:artist)=>{
+    setCurrentArtist(artist)
+    navigate("/artist")
+  }
 
   return (
     <section className="mb-8">
@@ -16,7 +24,8 @@ export const ArtistsSection: React.FC = () => {
       {/* Scrollable Container */}
       <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 scrollbar-hide px-2 sm:px-0">
         {artists?.map((artist) => (
-          <div
+          <button
+            onClick={()=>handleArtistPageRedirect(artist)}
             key={artist.artist_id}
             className="shrink-0 flex flex-col items-center group cursor-pointer p-1"
           >
@@ -39,7 +48,7 @@ export const ArtistsSection: React.FC = () => {
             <p className="text-sm font-medium text-center truncate max-w-20 sm:max-w-28 px-1 text-foreground/90 group-hover:text-primary transition-colors">
               {artist.artist_name}
             </p>
-          </div>
+          </button>
         ))}
       </div>
     </section>

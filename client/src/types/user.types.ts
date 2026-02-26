@@ -10,12 +10,13 @@ export interface song{
     size:number
 }
 
-interface artist{
+export interface artist{
     artist_id:string,
     artist_bio:string,
     artist_name:string,
     artist_profilePic:string
 }
+
 
 export interface userStoreT {
     recentSongs:  song[];
@@ -33,6 +34,10 @@ export interface userStoreT {
     isLimitReached:boolean;
     isLikingSong:boolean;
     likedSongsId:string[];
+    currentArtist:artist | null;
+    isGettingCurrentArtistSongs:boolean;
+    currentArtistSongs:song[],
+
 
     getRecentSongs: (limit:number | null) => Promise<void>;
     updateSongEvent:(currentTrack:song,duration:number)=> Promise<void>;
@@ -43,4 +48,7 @@ export interface userStoreT {
     setSongLike:(songId:string)=>Promise<number|undefined>;
     checkSongLiked:(songId:string)=>boolean;
     cleanupAfterLogoutUser:()=>void;
+    setCurrentArtist:(artist:artist)=>void;
+    getCurrentArtistSongs:(artistId:string)=>Promise<void>;
+
 }

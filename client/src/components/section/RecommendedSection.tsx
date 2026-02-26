@@ -80,7 +80,7 @@ export const RecommendedSection: React.FC<RecommendedSectionProps> = ({ progress
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="min-w-[140px] sm:min-w-[180px] md:min-w-[220px] snap-start cursor-pointer group"
+              className="min-w-35 sm:min-w-45q md:min-w-55 snap-start cursor-pointer group"
               onClick={() => handleSongPLay(index)}
             >
               <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4 shadow-lg bg-zinc-900">

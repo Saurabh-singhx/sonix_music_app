@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { axiosInstance } from "../../lib/axios";
-import type { song, userStoreT } from "@/types/user.types";
+import type { artist, song, userStoreT } from "@/types/user.types";
 import { useAuthStore } from "../auth/auth.store";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
-
 export const useUserStore = create<userStoreT>((set, get) => ({
 
 
@@ -23,6 +22,9 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     isLimitReached:false,
     isLikingSong:false,
     likedSongsId:[],
+    currentArtist:null,
+    isGettingCurrentArtistSongs:false,
+    currentArtistSongs:[],
 
     getRecentSongs: async (limit) => {
 
@@ -265,7 +267,25 @@ export const useUserStore = create<userStoreT>((set, get) => ({
             AllSongs:[],
             artists:[],
         })
-    }
+    },
 
+    setCurrentArtist:(artist:artist)=>{
+        set({currentArtist:artist})
+    },
+
+    getCurrentArtistSongs:async(artistId:string)=>{
+
+        set({isGettingCurrentArtistSongs:true})
+
+        try {
+            const res = await axiosInstance.get(`/api/v1/user/artistongs/${artistId}`)
+
+            set({currentArtistSongs:res.data.songs})
+        } catch (error) {
+            
+        }finally{
+            set({isGettingCurrentArtistSongs:false})
+        }
+    }
 
 }));

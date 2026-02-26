@@ -14,6 +14,7 @@ import AllSongsPage from './pages/user/AllSongsPage';
 import AppLayout from './pages/AppLayout';
 import MusicLoader from './components/ui/Loader';
 import RecommendedSongsPage from './pages/user/RecommendedSongsPage';
+import ArtistProfilePage from './pages/user/ArtistViewPage';
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/" element={authUser?.role === 'ADMIN' ? <AdminHomePage /> : authUser?.role ? <UserPage /> : <Navigate to="/login" />} />
           <Route path="/allsongs" element={authUser?.role ? <AllSongsPage /> : <Navigate to="/login" />} />
           <Route path="/recommended" element={authUser?.role ? <RecommendedSongsPage/> : <Navigate to="/login" />} />
+          <Route path="/artist" element={authUser?.role ? <ArtistProfilePage/> : <Navigate to="/login" />} />
         </Route>
       </Routes>
       <ToastContainer

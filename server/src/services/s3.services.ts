@@ -74,7 +74,7 @@ export async function getFileUrl(s3Key: string) {
     });
 
     return getSignedUrl(s3, command, {
-      expiresIn: 60 * 10, // 10 min
+      expiresIn: 60 * 60, //1 hr ==----==>
     });
   } catch (error) {
     console.log(error)

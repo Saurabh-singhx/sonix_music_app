@@ -1,10 +1,8 @@
 import cron from "node-cron";
 import { calculateSongSuggestion } from "../services/suggestion.services.js";
 
-cron.schedule("*/5 * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
     try {
-        console.log("⏳ Updating suggestion songs...");
-
         await calculateSongSuggestion();
 
         console.log("✅ suggestion updated");

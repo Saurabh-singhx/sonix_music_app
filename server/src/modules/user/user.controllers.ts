@@ -5,6 +5,7 @@ import { getFileUrl } from "../../services/s3.services.js";
 import { plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
+import { fixIsLikedInsong, fixIsLikedInsongSimple, songsWithUrl } from "../../helpers/user.helpers.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
 
@@ -57,8 +58,8 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
       nextCursor = nextItem!.song_id;
     }
 
-    const fixedRecentAllSongs = songs.map(song => {
-      const { likedByUsers=[], ...restSong } = song;
+    const fixedAllRecentSongs = songs.map(song => {
+      const { likedByUsers = [], ...restSong } = song;
 
       return {
         ...restSong,
@@ -66,34 +67,10 @@ export const getAllRecentSongs = async (req: Request, res: Response) => {
       };
     });
 
-    const songsWithUrls = await Promise.all(
-      fixedRecentAllSongs.map(async (song) => {
-        const songUrl = await getFileUrl(song.song_url);
-
-        const coverUrl = song.cover_image_url
-          ? await getFileUrl(song.cover_image_url)
-          : null;
-
-        const artistProfilePic = song.artist?.artist_profilePic
-          ? await getFileUrl(song.artist.artist_profilePic)
-          : null;
-
-        return {
-          ...song,
-          song_url: songUrl,
-          cover_image_url: coverUrl,
-          artist: song.artist
-            ? {
-              ...song.artist,
-              artist_profilePic: artistProfilePic,
-            }
-            : null,
-        };
-      })
-    );
+    const allRecentSongsWithUrl = await songsWithUrl(fixedAllRecentSongs)
 
     return res.status(200).json({
-      songs: songsWithUrls,
+      songs: allRecentSongsWithUrl,
       nextCursor,
     });
   } catch (err) {
@@ -126,7 +103,6 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
 
       select: {
         id: true,
-        score: true,
         song: {
           select: {
             song_id: true,
@@ -164,45 +140,13 @@ export const getRecommendedSongs = async (req: Request, res: Response) => {
       nextCursor = nextItem!.id;
     }
 
-    const fixedRecommendedSongs = recommendedSongs.map(song => {
-      const { likedByUsers = [], ...restSong } = song.song;
 
-      return {
-        ...restSong,
-        isLiked: likedByUsers.length > 0
-      };
-    });
-
-    const songsWithUrls = await Promise.all(
-      fixedRecommendedSongs.map(async (item) => {
-        const songUrl = await getFileUrl(item.song_url);
-
-        const coverUrl = item.cover_image_url
-          ? await getFileUrl(item.cover_image_url)
-          : null;
-
-        const artistProfilePic = item.artist?.artist_profilePic
-          ? await getFileUrl(item.artist.artist_profilePic)
-          : null;
-
-        return {
-          ...item,
-          song_url: songUrl,
-          cover_image_url: coverUrl,
-          artist: item.artist
-            ? {
-              ...item.artist,
-              artist_profilePic: artistProfilePic,
-            }
-            : null,
-
-        };
-      })
-    );
+    const fixedRecommendedSongs = fixIsLikedInsong(recommendedSongs)
+    const recommendedSongsWithUrls = await songsWithUrl(fixedRecommendedSongs)
 
 
     return res.status(200).json({
-      recommendedSongs: songsWithUrls,
+      recommendedSongs: recommendedSongsWithUrls,
       nextCursor,
     });
   } catch (error) {
@@ -255,44 +199,12 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
 
     });
 
-    const fixedTrendingSongs = trendingSongs.map(song => {
-      const { likedByUsers=[], ...restSong } = song.song;
+    const fixedTrendingSongs = fixIsLikedInsong(trendingSongs)
 
-      return {
-        ...restSong,
-        isLiked: likedByUsers.length > 0
-      };
-    });
-
-    const songsWithUrls = await Promise.all(
-      fixedTrendingSongs.map(async (item) => {
-        const songUrl = await getFileUrl(item.song_url);
-
-        const coverUrl = item.cover_image_url
-          ? await getFileUrl(item.cover_image_url)
-          : null;
-
-        const artistProfilePic = item.artist?.artist_profilePic
-          ? await getFileUrl(item.artist.artist_profilePic)
-          : null;
-
-        return {
-          ...item,
-          song_url: songUrl,
-          cover_image_url: coverUrl,
-          artist: item.artist
-            ? {
-              ...item.artist,
-              artist_profilePic: artistProfilePic,
-            }
-            : null,
-
-        };
-      })
-    );
+    const trendingSongsWithUrls = await songsWithUrl(fixedTrendingSongs)
 
 
-    res.status(200).json({ message: "trending song fetched successfully", trendingSongs: songsWithUrls });
+    res.status(200).json({ message: "trending song fetched successfully", trendingSongs: trendingSongsWithUrls });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -537,6 +449,7 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
   // add pagination ==----==>
 
   const { artistId } = req.params;
+  const user = req.user as authUser | undefined;
 
   try {
 
@@ -574,11 +487,24 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
             artist_profilePic: true,
           },
         },
+        ...(user && {
+          likedByUsers: {
+            where: {
+              user_id: user.user_id
+            },
+            select: {
+              user_id: true
+            }
+          }
+        })
       },
     });
 
+    const fixSongs = fixIsLikedInsongSimple(songs)
+    const artisSongsWithUrls = await songsWithUrl(fixSongs)
 
-    res.status(200).json({ message: "artist's songs fetched successfully" })
+
+    res.status(200).json({ message: "artist's songs fetched successfully", songs:artisSongsWithUrls })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

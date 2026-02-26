@@ -66,7 +66,7 @@ router.get("/getartists",
     protectRoute,
     getArtists
 );
-router.get("/artistsongs",
+router.get("/artistongs/:artistId",
     getArtistsSongsByUserLimiter,
     protectRoute,
     getArtistsSongs

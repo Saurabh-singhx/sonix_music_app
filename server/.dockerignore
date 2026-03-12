@@ -4,4 +4,3 @@ dist
 .env
 .env.docker
 npm-debug.log
-Dockerfile

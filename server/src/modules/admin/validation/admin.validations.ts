@@ -142,6 +142,29 @@ export const addSongDetailsValidator = [
     .isString().withMessage("language must be string"),
 ];
 
+export const addSongDetailsWithAiValidator = [
+  body("song_title")
+    .exists().withMessage("song_title is required")
+    .isString().withMessage("song_title must be string")
+    .trim()
+    .notEmpty().withMessage("song_title cannot be empty"),
+
+  body("song_url")
+    .exists().withMessage("song_url is required")
+    .isString().withMessage("song_url must be string"),
+
+  body("artist_id")
+    .exists().withMessage("artist_id is required")
+    .isString().withMessage("artist_id must be string")
+    .notEmpty().withMessage("artist_id cannot be empty"),
+
+
+  body("cover_image_url")
+    .optional()
+    .isString()
+];
+
+
 export const createArtistValidator = [
   body("artist_name")
     .exists().withMessage("artist_name is required")

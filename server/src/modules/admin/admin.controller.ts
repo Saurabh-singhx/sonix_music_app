@@ -3,12 +3,13 @@ import { Request, Response } from "express";
 import { createImageUploadUrl, createUploadUrl } from "../../services/s3.services.js";
 import { authUser } from "../../types/request/auth.js";
 import { artistBody, getSongUploadUrlBody, getUserProfileImgUploadUrl } from "../../types/request/admin.types.js";
-import { songBody } from "../../types/request/song.types.js";
+import { songBody, songBodyAi } from "../../types/request/song.types.js";
+import { songDetailsFromAi } from "../../services/gemini.services.js";
 
-export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, res : Response) => {
+export const switchToAdmin = async (req: Request<{}, {}, { secret_key: string }>, res: Response) => {
 
-    const { secret_key }  = req.body;
-    const user = req.user as authUser ;
+    const { secret_key } = req.body;
+    const user = req.user as authUser;
     try {
         if (!secret_key) {
             return res.status(400).json({ message: "fill all feilds" })
@@ -39,7 +40,7 @@ export const switchToAdmin = async (req : Request< {},{},{secret_key:string}>, r
             }
         })
 
-        return res.status(200).json({ message: "successfull" ,newUser})
+        return res.status(200).json({ message: "successfull", newUser })
     } catch (error) {
         console.log("error in signup controller", error);
         return res.status(500).json({ message: "Internal server error" })
@@ -126,14 +127,14 @@ export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Respon
         }
 
         const releaseDate =
-            release_date ? new Date(release_date):new Date(Date.now());
+            release_date ? new Date(release_date) : new Date(Date.now());
 
         const song = await prisma.song.create({
             data: {
                 song_url,
                 song_title,
                 artist_id,
-                size:duration,
+                size: duration,
                 genre,
                 release_date: releaseDate,
                 cover_image_url,
@@ -165,6 +166,79 @@ export const addSongDetails = async (req: Request<{}, {}, songBody>, res: Respon
         console.log("error in addSongDetails controller", err.message);
         return res.status(500).json({ message: "Internal server error" })
     }
+}
+
+export const addSongDetailsWithAi = async (req: Request<{}, {}, songBody>, res: Response) => {
+    const {
+        song_title,
+        song_url,
+        artist_id,
+        cover_image_url,
+    } = req.body;
+
+    try {
+        const artist = await prisma.artist.findUnique({
+            where: {
+                artist_id: artist_id
+            },
+            select: {
+                artist_name: true
+            }
+        })
+
+        if (!artist) {
+            return res.status(400).json({ message: "artist not found" })
+        }
+
+        const aiResponse = await songDetailsFromAi(song_title, artist.artist_name);
+
+        if (!aiResponse) {
+            return res.status(400).json({ message: "no response from ai" })
+        }
+
+        const formattedDate = new Date(aiResponse.releaseDate.replace(/\//g, "-"));
+
+        const song = await prisma.song.create({
+            data: {
+                song_url,
+                song_title,
+                artist_id,
+                size: Number(aiResponse?.duration),
+                genre: aiResponse?.genre,
+                release_date: formattedDate,
+                cover_image_url,
+                tags: aiResponse?.tags,
+            }
+        });
+
+
+        if (!song) {
+            return res.status(400).json({ message: "error while creating song-profile" })
+        }
+
+        const songAI = await prisma.songAIProfile.create({
+            data: {
+                song_id: song.song_id,
+                mood: aiResponse.mood,
+                energy_level: aiResponse.energy_level,
+                language: aiResponse.language,
+                vibe_tags: aiResponse.tags,
+                updated_at: new Date()
+            }
+        });
+
+        if (!songAI) {
+            return res.status(400).json({ message: "error while creating song-ai-profile" })
+        }
+
+        return res.status(201).json({ message: "song details added", song, songAI })
+
+    } catch (error) {
+        console.log("error while adding song details",error)
+        return res.status(500).json({ message: "Internal server error"})
+    }
+
+
 }
 
 export const createArtist = async (req: Request<{}, {}, artistBody>, res: Response) => {

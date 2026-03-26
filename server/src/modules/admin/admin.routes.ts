@@ -1,7 +1,7 @@
 import express from "express";
 import { protectAdminRoute, validate } from "../../middleware/auth.middleware.js";
-import { addSongDetails, createArtist, getArtistImageUploadUrl, getArtists, getUploadUrl, setImages3Key } from "./admin.controller.js";
-import { addSongValidation, createArtistValidator, getArtistImageUploadUrlValidator, getUploadUrlValidator, setImages3KeyValidator } from "./validation/admin.validations.js";
+import { addSongDetails, addSongDetailsWithAi, createArtist, getArtistImageUploadUrl, getArtists, getUploadUrl, setImages3Key } from "./admin.controller.js";
+import { addSongDetailsWithAiValidator, addSongValidation, createArtistValidator, getArtistImageUploadUrlValidator, getUploadUrlValidator, setImages3KeyValidator } from "./validation/admin.validations.js";
 import { createArtistLimiter, getArtistsLimiter, getUploadImageUrlLimiter, getUploadSongUrlLimiter, updateImages3keyLimiter, updateSongs3keyLimiter } from "../../middleware/ratelimit.js";
 
 
@@ -41,6 +41,12 @@ router.post("/addsongData",
     protectAdminRoute,
     addSongDetails
 );
+
+router.post("/add-songdetails-ai",
+    addSongDetailsWithAiValidator,validate,
+    protectAdminRoute,
+    addSongDetailsWithAi
+)
 router.get("/getartists",
     getArtistsLimiter,
     protectAdminRoute,

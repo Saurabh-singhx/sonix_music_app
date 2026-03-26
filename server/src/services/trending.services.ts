@@ -80,7 +80,7 @@ export async function calculateTrending() {   //fix here <<==----==
 export async function updateTrendingTable() {
   try {
     const trending = await calculateTrending();
-    if(!trending){
+    if(!trending || trending.length <=5){
       console.error(error,"no trending songs to update trending Table");
       return;
     }

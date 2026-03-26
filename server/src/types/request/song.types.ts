@@ -2,7 +2,6 @@
 
 export interface songBody {
     song_title: string;
-    artist_name: string;
     song_url:string;
     artist_id: string;
     duration: number;
@@ -10,8 +9,18 @@ export interface songBody {
     release_date: string;
     cover_image_url: string;
     tags: string;
-    mood: string; // happy, sad, chill, workout
-    energy_level: string; // low, medium, high
+    mood: string;
+    energy_level: string; 
     language: string;
-    updated_at:Date
+
+}
+
+export interface songBodyAi{
+    song_title: string;
+    artist_name: string;
+    song_url:string;
+    artist_id: string;
+    duration: number;
+    cover_image_url: string;
+    language: string;
 }

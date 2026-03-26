@@ -119,10 +119,6 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
             const res = await axiosInstance.post("/api/v1/admin/getsonguploadurl", data);
             set({ songuploadUrl: res.data.result?.uploadUrl });
             set({ songUrlKey: res.data.result?.key })
-
-            console.log(res.data.result?.uploadUrl)
-            console.log(res.data.result?.key)
-
         } catch (error) {
              let errorMessage: string = "error while fetching song upload url"
             if (error instanceof AxiosError) {
@@ -172,19 +168,19 @@ export const useAdminStore = create<AdminStoreT>((set, get) => ({
                 },
             });
 
-
-            await axiosInstance.post("/api/v1/admin/addsongData", {
+            
+            await axiosInstance.post("/api/v1/admin/add-songdetails-ai", {
                 song_title: data.song_title,
                 song_url: songUrlKey,
                 artist_id: data.artist_id,
-                duration: data.duration,
-                genre: data.genre,
-                release_date: data.release_date,
+                // duration: data.duration,
+                // genre: data.genre,
+                // release_date: data.release_date,
                 cover_image_url: imageUrlKey,
-                tags: data.tags,
-                mood: data.mood,
-                energy_level: data.energy_level,
-                language: data.language
+                // tags: data.tags,
+                // mood: data.mood,
+                // energy_level: data.energy_level,
+                // language: data.language
             })
 
             toast.success("Song uploaded successfully");

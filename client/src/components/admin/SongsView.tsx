@@ -66,7 +66,7 @@ const SongsView = () => {
     let isValid = true;
 
     // Check all required fields
-    const requiredFields = ['title', 'artistId', 'genre', 'releaseDate', 'mood', 'energyLevel', 'language', 'tags'];
+    const requiredFields = ['title', 'artistId' ]; //===------===> 'genre', 'releaseDate', 'mood', 'energyLevel', 'language', 'tags'
 
     requiredFields.forEach(field => {
       const error = validateField(field, formData[field as keyof TrackFormData]);
@@ -249,9 +249,7 @@ const SongsView = () => {
     }
   };
 
-  const isFormValid = trackFile && coverImage && formData.title && formData.artistId &&
-    formData.genre && formData.releaseDate && formData.mood &&
-    formData.energyLevel && formData.language && formData.tags;
+  const isFormValid = trackFile && coverImage && formData.title && formData.artistId;
 
   return (
     <div className=" w-full sm:p-6 lg:p-8 animate-fade-in">

@@ -55,10 +55,11 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
             } else {
+                
                 const res = await axiosInstance.get("/api/v1/user/recent-songs",
                     {
                         params: {
-                            limit: limit,
+                            limit: limit=15,
                             ...(nextCursor && { cursor: nextCursor })
                         }
                     }
@@ -73,7 +74,9 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                         }
                     }
                 }
+
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
+                set({nextCursor:res.data.nextCursor})
                 // console.log("recent:",res.data.songs)
             }
             

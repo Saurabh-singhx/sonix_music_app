@@ -5,7 +5,6 @@ import './AnimatedList.css';
 import type { song } from "@/types/user.types";
 import { usePlayerStore } from "@/store/player/player.store";
 import { formattedDate } from "@/helpers/user.helpers";
-
 interface AnimatedItemProps {
   children: ReactNode;
   delay?: number;
@@ -36,6 +35,11 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index,
 interface AnimatedListProps {
   items?: song[];
   onItemSelect?: (item: song, index: number) => void;
+
+  loadMore?: () => void;
+  hasMore?: boolean;
+  loading?: boolean;
+
   showGradients?: boolean;
   enableArrowNavigation?: boolean;
   className?: string;
@@ -56,6 +60,9 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   displayScrollbar = true,
   initialSelectedIndex = -1,
   playing,
+  hasMore,
+  loadMore,
+  loading
 
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
@@ -76,12 +83,16 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   );
 
   const handleScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLDivElement;
+    const target = e.currentTarget as HTMLDivElement;
     const { scrollTop, scrollHeight, clientHeight } = target;
     setTopGradientOpacity(Math.min(scrollTop / 50, 1));
     const bottomDistance = scrollHeight - (scrollTop + clientHeight);
     setBottomGradientOpacity(scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1));
-  }, []);
+    if (bottomDistance < 200 && hasMore && !loading) {
+      loadMore?.();
+    }
+
+  }, [hasMore, loading, loadMore]);
 
   useEffect(() => {
     if (!enableArrowNavigation || !items) return;
@@ -129,8 +140,6 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     }
     setKeyboardNav(false);
   }, [selectedIndex, keyboardNav]);
-
-  
 
   return (
     <div className={`scroll-list-container ${className}`}>
@@ -224,7 +233,8 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
       {showGradients && (
         <>
           <div className="top-gradient" style={{ opacity: topGradientOpacity }}></div>
-          <div className="bottom-gradient" style={{ opacity: bottomGradientOpacity }}></div>
+          <div className="bottom-gradient" style={{ opacity: bottomGradientOpacity }}>
+          </div>
         </>
       )}
     </div>

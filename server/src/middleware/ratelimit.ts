@@ -307,7 +307,7 @@ export const getArtistsLimiter = rateLimit({
 
 export const publicLimiterAllRoutes = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
-  max: 100, //fix here --------------------<<<
+  max: 10000000, //fix here --------------------<<<
   standardHeaders: true,
   legacyHeaders: false,
 

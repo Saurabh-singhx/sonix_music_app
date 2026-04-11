@@ -6,6 +6,7 @@ import { plalistDetails, userSongEventPayload } from "../../types/request/user.t
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
 import { fixIsLikedInsong, fixIsLikedInsongSimple, songsWithUrl } from "../../helpers/user.helpers.js";
+import { songDB } from "../../types/response/user.response.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
 
@@ -159,45 +160,59 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
 
   const user = req.user as authUser | undefined;
   try {
-    const trendingSongs = await prisma.trendingSongs.findMany({
-      take: 10,
-      orderBy: {
-        rank: "asc"
-      },
-      select: {
-        rank: true,
-        score: true,
-        song: {
-          select: {
-            song_id: true,
-            song_title: true,
-            song_url: true,
-            cover_image_url: true,
-            release_date: true,
-            size: true,
-            artist: {
-              select: {
-                artist_id: true,
-                artist_bio: true,
-                artist_name: true,
-                artist_profilePic: true,
-              },
-            },
-            ...(user && {
-              likedByUsers: {
-                where: {
-                  user_id: user.user_id
-                },
-                select: {
-                  user_id: true
-                }
-              }
-            })
-          },
-        }
-      }
 
-    });
+    const trendingsongsKey = user
+      ? `trendingsongs-get:${user.user_id}`
+      : `trendingsongs-get:guest`;
+
+    const checkTrendingSongsInRedis = await redisClient.get(trendingsongsKey);
+    let trendingSongs;
+    if (!checkTrendingSongsInRedis) {
+      trendingSongs = await prisma.trendingSongs.findMany({
+        take: 10,
+        orderBy: {
+          rank: "asc"
+        },
+        select: {
+          rank: true,
+          score: true,
+          song: {
+            select: {
+              song_id: true,
+              song_title: true,
+              song_url: true,
+              cover_image_url: true,
+              release_date: true,
+              size: true,
+              artist: {
+                select: {
+                  artist_id: true,
+                  artist_bio: true,
+                  artist_name: true,
+                  artist_profilePic: true,
+                },
+              },
+              ...(user && {
+                likedByUsers: {
+                  where: {
+                    user_id: user.user_id
+                  },
+                  select: {
+                    user_id: true
+                  }
+                }
+              })
+            },
+          }
+        }
+
+      });
+
+      await redisClient.set(trendingsongsKey, JSON.stringify(trendingSongs), { EX: 3600 })
+    } else {
+      const parsedTrendingSongsFromRedis = JSON.parse(checkTrendingSongsInRedis)
+      trendingSongs = parsedTrendingSongsFromRedis
+    }
 
     const fixedTrendingSongs = fixIsLikedInsong(trendingSongs)
 
@@ -504,7 +519,7 @@ export const getArtistsSongs = async (req: Request, res: Response) => {
     const artisSongsWithUrls = await songsWithUrl(fixSongs)
 
 
-    res.status(200).json({ message: "artist's songs fetched successfully", songs:artisSongsWithUrls })
+    res.status(200).json({ message: "artist's songs fetched successfully", songs: artisSongsWithUrls })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

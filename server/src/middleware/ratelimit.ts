@@ -1,23 +1,15 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import redisClient from "../config/redis.js";
-import {Request} from "express"
+
 // auth routes ==----==>
-/**
- * LOGIN rate limit
- * 5 attempts / 15 minutes
- */
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const user = req.body?.email ?? "anon";
-  //   return `${ipKeyGenerator(req.ip!)}:${user}`;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     sendCommand: (...args) => redisClient.sendCommand(args),
@@ -31,22 +23,13 @@ export const loginLimiter = rateLimit({
   }
 });
 
-/**
- * SIGNUP rate limit
- * 10 requests / 1 hour
- */
 export const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   const user = req.body?.email ?? "anon";
-  //   return `${ip}:${user}`;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     sendCommand: (...args) => redisClient.sendCommand(args),
@@ -65,7 +48,7 @@ export const googleAuthLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     sendCommand: (...args) => redisClient.sendCommand(args),
@@ -86,12 +69,7 @@ export const otpLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   const user = req.body?.email ?? "anon";
-  //   return `${ip}:${user}`;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     sendCommand: (...args) => redisClient.sendCommand(args),
@@ -113,11 +91,7 @@ export const logOutLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:logout:",
@@ -138,11 +112,7 @@ export const checkAuthLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:checkAuth:",
@@ -166,11 +136,7 @@ export const getUploadSongUrlLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getUploadSongUrl:",
@@ -190,11 +156,7 @@ export const createArtistLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:createArtist:",
@@ -214,11 +176,7 @@ export const getUploadImageUrlLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getUploadImageUrl:",
@@ -238,11 +196,7 @@ export const updateImages3keyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-  // keyGenerator: (req:Request) => {
-  //   const ip = ipKeyGenerator(req.ip!);
-  //   return ip;
-  // },
-  keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:updateImages3key:",
@@ -263,11 +217,7 @@ export const updateSongs3keyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
-//  keyGenerator: (req:Request) => {
-//     const ip = ipKeyGenerator(req.ip!);
-//     return ip;
-//   },
-keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:updateSongs3key:",
@@ -288,7 +238,7 @@ export const getArtistsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getArtists:",
@@ -306,12 +256,12 @@ export const getArtistsLimiter = rateLimit({
 // public limiters ==----==>
 
 export const publicLimiterAllRoutes = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000,
-  max: 10000000, //fix here --------------------<<<
+  windowMs: 30 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:public:",
@@ -320,7 +270,7 @@ export const publicLimiterAllRoutes = rateLimit({
 
   handler: (_req, res) => {
     res.status(429).json({
-      message: "Too many requests. Try again after 24 hour."
+      message: "Too many requests. Try again after 30 minutes."
     });
   },
 
@@ -332,7 +282,7 @@ export const guestCreateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:createguest:",
@@ -352,11 +302,11 @@ export const guestCreateLimiter = rateLimit({
 
 export const healthCheckLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30, 
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:healthcheck:",
@@ -379,7 +329,7 @@ export const getAllRecentSongsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getAllRecentSongs:",
@@ -400,7 +350,7 @@ export const getRecommendedSongsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getRecommendedSongs:",
@@ -421,7 +371,7 @@ export const getTrendingSongsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getTrendingSongs:",
@@ -442,7 +392,7 @@ export const createplaylistLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:createplaylist:",
@@ -463,7 +413,7 @@ export const getmyplaylistsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getmyplaylists:",
@@ -484,7 +434,7 @@ export const getpublicplaylistsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getpublicplaylists:",
@@ -505,7 +455,7 @@ export const getallplaylistsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getallplaylists:",
@@ -526,7 +476,7 @@ export const getplaylistsongsLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getplaylistsongs:",
@@ -547,7 +497,7 @@ export const getartistsByUserLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getartistsByUser:",
@@ -568,7 +518,7 @@ export const getArtistsSongsByUserLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:getArtistsSongsByUser:",
@@ -589,7 +539,7 @@ export const updateSongEventLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:updateSongEvent:",
@@ -610,7 +560,7 @@ export const likedSongLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 
- keyGenerator:(req)=>{return ipKeyGenerator(req.ip!)},
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
 
   store: new RedisStore({
     prefix: "rl:likedSong:",
@@ -624,4 +574,3 @@ export const likedSongLimiter = rateLimit({
   },
 
 });
-

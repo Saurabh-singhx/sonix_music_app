@@ -354,10 +354,16 @@ export const updateRecommendationWithAi = async (summary: string, user_id: strin
 
 
 export const verifyAddRecommendationQueue = async (userId: string) => {
-    const eventKey = `songevents:${userId}`;
     const coolDownKey = `recommendation-cooldown:${userId}`
+    const isCoolingDown = await redisClient.exists(coolDownKey);
+    if (isCoolingDown){
+        return;
+    }
+
+    const eventKey = `songevents:${userId}`;
     try {
         const count = await redisClient.incr(eventKey)
+        if (count === 1) await redisClient.expire(eventKey, 86400);
         if (count > 20) {
             const isTriggered = await redisClient.set(coolDownKey, 1, { expiration: { type: "EX", value: 900 }, condition: "NX" });
             if (isTriggered) {
@@ -365,9 +371,11 @@ export const verifyAddRecommendationQueue = async (userId: string) => {
                 await redisClient.del(eventKey);
             }
         }
+        
     } catch (error) {
         console.log("error while add recommendation-job in queue", error)
     }
+    
 }
 
 // ================= RECOMMENDATION SYSTEM IMPROVEMENTS =================

@@ -12,88 +12,107 @@ export type songDetailsData = {
   energy_level: string;
   genre: string;
   tags: string[];
-  releaseDate:string;
-  duration:string;
-  language:string;
+  releaseDate: string;
+  duration: string;
+  language: string;
 }
 
 export const geminiAiResponseRecommendations = async (
   summary: string,
-  songDataDetails: string
+  songDataDetails: string,
+  maxRetries: number = 5
 ): Promise<AiRecommendation[] | null> => {
 
   if (!songDataDetails.length) {
     console.log("songDataDetails not found");
     return null;
   }
-  try {
-    const prompt = `
+
+  let attempted = 0;
+  while (attempted < maxRetries) {
+    try {
+      const prompt = `
           You are a music recommendation engine.
-            Return ONLY valid JSON.
+          Return ONLY a valid JSON array. No markdown, no backticks, no explanation outside the JSON.
 
-          USER LISTENING SUMMARY:
-        ${summary}
+            USER LISTENING SUMMARY:
+              ${summary}
 
-        CANDIDATE SONGS:
-        ${songDataDetails}
+            CANDIDATE SONGS:
+              ${songDataDetails}
 
-        Return JSON in this format:
-      [
-        {
-          "song_title": "string",
-          "song_index": number,
-          "score": number,
-          "reason": "short explanation"
-        }`;
+          Return JSON in this exact format:
+          [
+            {
+              "song_title": "Blinding Lights",
+              "song_index": 0,
+              "score": 0.95,
+              "reason": "Matches the upbeat energetic mood in your listening history"
+            }
+          ]`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        temperature: 0,
-        responseMimeType: "application/json",
-      },
-    });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          temperature: 0,
+          responseMimeType: "application/json",
+        },
+      });
 
-    const text = response.text;
-    if (!text) return null;
+      const text = response.text;
+      if (!text) throw new Error("Empty response");
 
-    const parsed = JSON.parse(text);
+      const parsed = JSON.parse(text);
 
-    if (!Array.isArray(parsed)) {
-      throw new Error("AI response is not an array");
-    }
-
-    for (const item of parsed) {
-      if (
-        typeof item.song_title !== "string" ||
-        typeof item.reason !== "string" ||
-        typeof item.song_index !== "number" ||
-        typeof item.score !== "number"
-      ) {
-        throw new Error("Invalid AI response format");
+      if (!Array.isArray(parsed)) {
+        throw new Error("AI response is not an array");
       }
-    }
 
-    return parsed as AiRecommendation[];
-  } catch (err) {
-    console.error("Gemini recommendation error:", err);
-    return null;
+      for (const item of parsed) {
+        if (
+          typeof item.song_title !== "string" ||
+          typeof item.reason !== "string" ||
+          typeof item.song_index !== "number" ||
+          typeof item.score !== "number"
+        ) {
+          throw new Error("Invalid AI response format");
+        }
+      }
+
+      return parsed as AiRecommendation[];
+    } catch (err) {
+      attempted++;
+      console.warn(`Gemini attempt ${attempted} failed:`, err);
+
+      if (attempted >= maxRetries) {
+        console.error("All retries exhausted");
+        return null;
+      }
+
+      // Exponential backoff: wait 1s, 2s, 4s before each retry
+      const delay = 1000 * Math.pow(2, attempted - 1);
+      await new Promise((res) => setTimeout(res, delay));
+    }
   }
+  return null;
 };
 
 
 //for uploading songs ==----==>
 
-export const songDetailsFromAi = async (songName: string, artistName: string):Promise<songDetailsData|null> => {
+export const songDetailsFromAi = async (songName: string, artistName: string): Promise<songDetailsData | null> => {
 
   if (!songName || !artistName) {
     throw new Error("song name or artist name not specified")
   }
 
-  try {
+  let attempted = 0;
 
-    const prompt = `I will give you song name and artist name search and give its orignal details like 
+  while (attempted < 3) {
+    try {
+
+      const prompt = `I will give you song name and artist name search and give its orignal details like 
     MOODS = ['Happy', 'Sad', 'Energetic', 'Calm', 'Romantic', 'Melancholic', 'Aggressive', 'Peaceful'],
     ENERGY_LEVELS = ['Low', 'Medium', 'High', 'Very High'],
     GENRES = ['Pop', 'Rock', 'Hip-Hop', 'R&B', 'Jazz', 'Classical', 'Electronic', 'Country', 'Reggae', 'Blues', 'Folk', 'Metal', 'Indie', 'Soul', 'Funk', 'Other'],
@@ -114,27 +133,49 @@ export const songDetailsFromAi = async (songName: string, artistName: string):Pr
     songName:${songName}
     artistName:${artistName}`
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        temperature: 0,
-        responseMimeType: "application/json",
-      },
-    });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          temperature: 0,
+          responseMimeType: "application/json",
+        },
+      });
 
-    const data = response.text;
+      const data = response.text;
 
-    if(!data){
-      return null;
+      if (!data) throw new Error("Empty response");
+
+      const parsedData = JSON.parse(data);
+
+      if (
+        typeof parsedData.mood !== "string" ||
+        typeof parsedData.energy_level !== "string" ||
+        typeof parsedData.genre !== "string" ||
+        !Array.isArray(parsedData.tags) ||
+        typeof parsedData.releaseDate !== "string" ||
+        typeof parsedData.duration !== "string" ||
+        typeof parsedData.language !== "string"
+      ) {
+        throw new Error("Invalid song details format");  // triggers retry
+      }
+
+      return parsedData as songDetailsData;
+
+    } catch (error) {
+      attempted++;
+      console.warn(`Gemini attempt ${attempted} failed:`, error);
+
+      if (attempted >= 3) {
+        console.error("All retries exhausted");
+        return null;
+      }
+
+      // Exponential backoff: wait 1s, 2s, 4s before each retry
+      const delay = 1000 * Math.pow(2, attempted - 1);
+      await new Promise((res) => setTimeout(res, delay));
     }
-
-    const parsedData:songDetailsData= JSON.parse(data);
-
-    return parsedData;
-
-  } catch (error) {
-    console.error("Gemini recommendation error:", error);
-    return null;
   }
+  return null;
+
 }

@@ -1,7 +1,7 @@
 import { body, param } from "express-validator";
 
 export const createPlaylistValidator = [
-  body("name")
+  body("playlistName")
     .exists().withMessage("name is required")
     .isString().withMessage("name must be string")
     .trim()

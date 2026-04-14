@@ -6,7 +6,6 @@ import { plalistDetails, userSongEventPayload } from "../../types/request/user.t
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
 import { fixIsLikedInsong, fixIsLikedInsongSimple, songsWithUrl } from "../../helpers/user.helpers.js";
-import { songDB } from "../../types/response/user.response.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
 
@@ -161,14 +160,7 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
   const user = req.user as authUser | undefined;
   try {
 
-    const trendingsongsKey = user
-      ? `trendingsongs-get:${user.user_id}`
-      : `trendingsongs-get:guest`;
-
-    const checkTrendingSongsInRedis = await redisClient.get(trendingsongsKey);
-    let trendingSongs;
-    if (!checkTrendingSongsInRedis) {
-      trendingSongs = await prisma.trendingSongs.findMany({
+      const trendingSongs = await prisma.trendingSongs.findMany({
         take: 10,
         orderBy: {
           rank: "asc"
@@ -208,12 +200,6 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
 
       });
 
-      await redisClient.set(trendingsongsKey, JSON.stringify(trendingSongs), { EX: 3600 })
-    } else {
-      const parsedTrendingSongsFromRedis = JSON.parse(checkTrendingSongsInRedis)
-      trendingSongs = parsedTrendingSongsFromRedis
-    }
-
     const fixedTrendingSongs = fixIsLikedInsong(trendingSongs)
 
     const trendingSongsWithUrls = await songsWithUrl(fixedTrendingSongs)
@@ -230,38 +216,47 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
 // user-playlists controllers ==----==>
 export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: Response) => {
 
-  const { name, description, isPublic } = req.body;
+  const { playlistName, description, isPublic } = req.body;
   const user = req.user as authUser;
 
   try {
 
-    if (!name || !description) {
-      return res.status(400).json({ message: "all fields required" })
+    if (!playlistName || !description) {
+      return res.status(400).json({ message: "all fields are required" })
     }
 
     const checkPlaylist = await prisma.playlist.findUnique({
       where: {
         user_id_playlist_name: {
           user_id: user.user_id,
-          playlist_name: name,
+          playlist_name: playlistName,
         },
       }
     })
 
     if (checkPlaylist) {
-      return res.status(409).json({ message: `playlist named ${name} already exists` })
+      return res.status(409).json({ message: `playlist named ${playlistName} already exists` })
     }
 
     const newPlaylist = await prisma.playlist.create({
       data: {
-        playlist_name: name,
+        playlist_name: playlistName,
         user_id: user.user_id,
         description: description,
         is_public: isPublic
       },
+      select:{
+        playlist_id:true,
+        playlist_name:true,
+        description:true,
+        is_public:true,
+        created_at:true,
+      }
     });
 
-    res.status(201).json({ message: "playlist created successfully", newPlaylist })
+    const playlist = {...newPlaylist,songCount:0}
+
+    res.status(201).json({ message: "playlist created successfully", playlist })
 
   } catch (error) {
     console.error(error);
@@ -270,27 +265,50 @@ export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: 
 }
 
 export const getMyPlaylists = async (req: Request, res: Response) => {
-
   const user = req.user as authUser;
 
   try {
-
     const playlists = await prisma.playlist.findMany({
       where: {
-        user_id: user.user_id
+        user_id: user.user_id,
+      },
+      select: {
+        playlist_id: true,
+        playlist_name: true,
+        description: true,
+        is_public: true,
+        created_at: true,
+        _count: {
+          select: {
+            songs: true
+          }
+        }
       }
     });
 
     if (playlists.length === 0) {
-      return res.status(200).json({ message: "no playlist found for this user" })
+      return res.status(200).json({ message: "no playlist found for this user" });
     }
 
-    res.status(200).json({ message: "playlists fetched successfully", playlists })
+    const formattedPlaylists = playlists.map(p => ({
+      playlist_id: p.playlist_id,
+      playlist_name: p.playlist_name,
+      description: p.description,
+      is_public: p.is_public,
+      created_at: p.created_at,
+      songCount: p._count.songs
+    }));
+
+    return res.status(200).json({
+      message: "playlists fetched successfully",
+      playlists: formattedPlaylists
+    });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export const getPublicPlaylists = async (req: Request, res: Response) => {
 
@@ -346,7 +364,7 @@ export const getAllPlaylist = async (req: Request, res: Response) => {
   }
 }
 
-export const getPlaylistsSongs = async (req: Request, res: Response) => {
+export const getPlaylistSongs = async (req: Request, res: Response) => {
 
   const { playlistId } = req.params;
   const user = req.user as authUser;
@@ -356,7 +374,6 @@ export const getPlaylistsSongs = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "all fields required" });
     }
 
-    // check playlist + access
     const playlist = await prisma.playlist.findFirst({
       where: {
         playlist_id: playlistId,
@@ -397,12 +414,25 @@ export const getPlaylistsSongs = async (req: Request, res: Response) => {
                 artist_profilePic: true,
               },
             },
+            ...(user && {
+                likedByUsers: {
+                  where: {
+                    user_id: user.user_id
+                  },
+                  select: {
+                    user_id: true
+                  }
+                }
+              })
           },
         }
       }
     })
 
-    res.status(200).json({ message: "playlist song fetched successfully", playlistSongs })
+    const fixedPlaylistSongs = fixIsLikedInsong(playlistSongs);
+    const PlaylistSongsWithurl = await songsWithUrl(fixedPlaylistSongs);
+
+    res.status(200).json({ message: "playlist song fetched successfully", songs:PlaylistSongsWithurl })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

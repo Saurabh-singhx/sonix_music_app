@@ -1,5 +1,5 @@
 export interface plalistDetails {
-    name:string,
+    playlistName:string,
     description:string,
     isPublic:boolean
 }

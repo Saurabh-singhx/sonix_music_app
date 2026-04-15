@@ -5,6 +5,7 @@ import './AnimatedList.css';
 import type { song } from "@/types/user.types";
 import { usePlayerStore } from "@/store/player/player.store";
 import { formattedDate } from "@/helpers/user.helpers";
+import { Button } from "@mui/material";
 interface AnimatedItemProps {
   children: ReactNode;
   delay?: number;
@@ -49,6 +50,9 @@ interface AnimatedListProps {
   playing: boolean;
   currentTime: string;
   duration: number;
+  playlistSelect?:boolean;
+
+  onPlaylistSongAdd?:(item:song)=>void;
 }
 
 const AnimatedList: React.FC<AnimatedListProps> = ({
@@ -62,7 +66,9 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   playing,
   hasMore,
   loadMore,
-  loading
+  loading,
+  playlistSelect = false,
+  onPlaylistSongAdd
 
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
@@ -75,7 +81,8 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   const handleItemClick = useCallback(
     (item: song, index: number) => {
       setSelectedIndex(index);
-      if (onItemSelect) {
+
+      if (onItemSelect && !playlistSelect) {
         onItemSelect(item, index);
       }
     },
@@ -141,11 +148,17 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     setKeyboardNav(false);
   }, [selectedIndex, keyboardNav]);
 
+  const handlePlaylistSongAdd = (item:song) =>{
+    if(onPlaylistSongAdd){
+      onPlaylistSongAdd(item)
+    }
+  }
+
   return (
     <div className={`scroll-list-container ${className}`}>
-      <div ref={listRef} className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''}`} onScroll={handleScroll}>
+      <div ref={listRef} className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} ${playlistSelect? 'min-h-auto':'min-h-90vh'}`} onScroll={handleScroll}>
         {items?.map((track, index) => {
-          const isActive = currentSongindex === index;
+          const isActive =  selectedIndex === index;
           return (
             <AnimatedItem
               key={index}
@@ -217,14 +230,29 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
                 </div>
 
                 {/* Duration / Options */}
-                <div className="flex items-center gap-2">
+                {
+                  !playlistSelect &&(<div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground tabular-nums">
                     {formattedDate(track.release_date)}
                   </span>
                   {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal className="w-4 h-4" />
                   </Button> */}
-                </div>
+                </div>)
+                }
+
+                {
+                  playlistSelect &&(
+                    <div>
+                      <button
+                      onClick={()=>handlePlaylistSongAdd(track)}
+                      className="py-2 px-4 bg-primary-foreground text-white rounded-3xl hover:bg-white hover:text-black"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  )
+                }
               </motion.div>
             </AnimatedItem>
           )

@@ -67,12 +67,12 @@ export const InputField = ({ label, icon, error, className, ...props }: InputFie
       </label>
 
       {/* Animated underline/border effect */}
-      <motion.div 
+      {/* <motion.div 
         className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-indigo-500 to-purple-500"
         initial={{ width: "0%" }}
         animate={{ width: isFocused ? "100%" : "0%" }}
         transition={{ duration: 0.3 }}
-      />
+      /> */}
     </div>
   );
 };

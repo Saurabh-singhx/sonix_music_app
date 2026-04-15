@@ -16,22 +16,29 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     recommendedNextCursor: null,
     isGettingRecommendedSongs: false,
     isGettingTrendingSongs: false,
-    isGettingArtistsList:false,
-    AllSongs:[],
-    artists:[],
-    isLimitReached:false,
-    isLikingSong:false,
-    likedSongsId:[],
-    currentArtist:null,
-    isGettingCurrentArtistSongs:false,
-    currentArtistSongs:[],
+    isGettingArtistsList: false,
+    AllSongs: [],
+    artists: [],
+    isLimitReached: false,
+    isLikingSong: false,
+    likedSongsId: [],
+    currentArtist: null,
+    isGettingCurrentArtistSongs: false,
+    currentArtistSongs: [],
+    userPlaylists: [],
+    isCreatingPlaylist: false,
+    isgettingMyPlaylists: false,
+    currentPlaylistSongs: [],
+    currentPlaylistView: null,
+    isGettingPlaylistSongs: false,
+    isAddingPlaylistSongs: false,
 
     getRecentSongs: async (limit) => {
 
         set({ isGettingSongs: true });
         const { authUser } = useAuthStore.getState();
         const { nextCursor, recentSongs } = get();
-        const {setisLimitReached} = get();
+        const { setisLimitReached } = get();
         try {
 
             if (authUser?.role === "guest") {
@@ -43,7 +50,7 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                         }
                     }
                 )
-                 if (res.data?.songs) {
+                if (res.data?.songs) {
                     const newSong: song[] = res.data?.songs;
                     for (const s of recentSongs) {
 
@@ -55,11 +62,11 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
             } else {
-                
+
                 const res = await axiosInstance.get("/api/v1/user/recent-songs",
                     {
                         params: {
-                            limit: limit=15,
+                            limit: limit = 15,
                             ...(nextCursor && { cursor: nextCursor })
                         }
                     }
@@ -76,17 +83,17 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                 }
 
                 set({ recentSongs: [...recentSongs, ...res.data?.songs] })
-                set({nextCursor:res.data.nextCursor})
+                set({ nextCursor: res.data.nextCursor })
                 // console.log("recent:",res.data.songs)
             }
-            
+
         } catch (error) {
             let errorMessage: string = "error while getting recent added songs"
             if (error instanceof AxiosError) {
                 errorMessage = error.response?.data?.message ?? error.message;
-                if(error.status === 429 && authUser?.role === "guest"){
+                if (error.status === 429 && authUser?.role === "guest") {
                     setisLimitReached(true)
-                }else{
+                } else {
                     toast.error(errorMessage)
                 }
             }
@@ -98,25 +105,21 @@ export const useUserStore = create<userStoreT>((set, get) => ({
 
     updateSongEvent: async (currentTrack, duration) => {
         const { recentlyPlayedSongs } = get();
-        const {authUser} = useAuthStore.getState();
+        const { authUser } = useAuthStore.getState();
+        const MAX_RECENT = 4;
+        // 1. Remove duplicate if it exists
+        const filtered = recentlyPlayedSongs.filter(
+            (song) => song.song_id !== currentTrack.song_id
+        );
 
-        for (let i = recentlyPlayedSongs.length - 1; i >= 0; i--) {
-            if (currentTrack.song_id === recentlyPlayedSongs[i].song_id) {
-                recentlyPlayedSongs.splice(i, 1);
-                if(recentlyPlayedSongs.length >= 4){
-                    recentlyPlayedSongs.pop()
-                }
-                break;
-            }
-            
-        }
+        const updated = [currentTrack, ...filtered];
 
+        const trimmed = updated.slice(0, MAX_RECENT);
 
-        // recentlyPlayedSongs.push(currentTrack)
-        set({ recentlyPlayedSongs: [currentTrack, ...recentlyPlayedSongs] })
+        set({ recentlyPlayedSongs: trimmed });
 
         try {
-            if(authUser?.role !== "guest"){
+            if (authUser?.role !== "guest") {
                 await axiosInstance.post("/api/v1/user/song-event", { songId: currentTrack.song_id, duration })
             }
         } catch (error) {
@@ -154,7 +157,7 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     getTrendingSongs: async () => {
 
         const { authUser } = useAuthStore.getState();
-        const {setisLimitReached} = get()
+        const { setisLimitReached } = get()
         set({ isGettingTrendingSongs: true });
 
         try {
@@ -169,8 +172,8 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                 set({ trendingSongs: res.data?.trendingSongs })
             }
         } catch (error) {
-            if(error instanceof AxiosError){
-                if(error.status === 429 && authUser?.role === "guest"){
+            if (error instanceof AxiosError) {
+                if (error.status === 429 && authUser?.role === "guest") {
                     setisLimitReached(true);
                 }
             }
@@ -179,116 +182,199 @@ export const useUserStore = create<userStoreT>((set, get) => ({
         }
     },
 
-    
-    getArtistList:async()=>{
 
-        set({isGettingArtistsList:true});
-        const {authUser} = useAuthStore.getState();
-        const {setisLimitReached} = get();
+    getArtistList: async () => {
+
+        set({ isGettingArtistsList: true });
+        const { authUser } = useAuthStore.getState();
+        const { setisLimitReached } = get();
         try {
-            
-            if(authUser?.role === "guest"){
+
+            if (authUser?.role === "guest") {
                 const res = await axiosInstance.get("/api/v1/public/getartists")
-                set({artists:res.data?.artists})
-            }else{
+                set({ artists: res.data?.artists })
+            } else {
                 const res = await axiosInstance.get("/api/v1/user/getartists")
-                set({artists:res.data?.artists})
+                set({ artists: res.data?.artists })
             }
         } catch (error) {
-            if(error instanceof AxiosError){
-                if(error.status === 429 && authUser?.role === "guest"){
+            if (error instanceof AxiosError) {
+                if (error.status === 429 && authUser?.role === "guest") {
                     setisLimitReached(true);
                 }
             }
-        }finally{
-            set({isGettingArtistsList:false})
+        } finally {
+            set({ isGettingArtistsList: false })
         }
     },
 
-    getAllSongs:()=>{
-        const {recentSongs,trendingSongs,recommendedSongs} = get();
-        const allSongsSet:Set<song> = new Set();
+    getAllSongs: () => {
+        const { recentSongs, trendingSongs, recommendedSongs } = get();
+        const allSongsSet: Set<song> = new Set();
 
-        for(const s of recentSongs){
+        for (const s of recentSongs) {
             allSongsSet.add(s);
         }
-        for(const s of trendingSongs){
+        for (const s of trendingSongs) {
             allSongsSet.add(s);
         }
-        for(const s of recommendedSongs){
+        for (const s of recommendedSongs) {
             allSongsSet.add(s);
         }
 
-        const uniqueSongs:song[] = [];
-        for(const s of allSongsSet){
-            uniqueSongs.push(s)  
+        const uniqueSongs: song[] = [];
+        for (const s of allSongsSet) {
+            uniqueSongs.push(s)
         }
 
-        set({AllSongs:uniqueSongs})
+        set({ AllSongs: uniqueSongs })
     },
 
-    setisLimitReached:(value)=>{
-        set({isLimitReached:value})
+    setisLimitReached: (value) => {
+        set({ isLimitReached: value })
     },
 
-    setSongLike:async(songId)=>{
+    setSongLike: async (songId) => {
 
-        set({isLikingSong:true});
-        const {likedSongsId} = get();
+        set({ isLikingSong: true });
+        const { likedSongsId } = get();
         try {
             const res = await axiosInstance.post(`/api/v1/user/like-song/${songId}`)
             // toast.success(res.data.message);
-            if(res.status === 201){
-                set({likedSongsId:[songId,...likedSongsId]})
+            if (res.status === 201) {
+                set({ likedSongsId: [songId, ...likedSongsId] })
             }
             return res.status;
         } catch (error) {
-           
-        }finally{
-            set({isLikingSong:false})
+
+        } finally {
+            set({ isLikingSong: false })
         }
     },
 
-    checkSongLiked:(songId:string)=>{
-        const{likedSongsId} = get();
-        for(const s of likedSongsId){
-            if(s === songId){
+    checkSongLiked: (songId: string) => {
+        const { likedSongsId } = get();
+        for (const s of likedSongsId) {
+            if (s === songId) {
                 return true;
             }
             break;
         }
         return false;
     },
-    cleanupAfterLogoutUser:()=>{
-        set({nextCursor:null,
-            likedSongsId:[],
-            recentlyPlayedSongs:[],
-            recentSongs:[],
-            recommendedNextCursor:null,
-            recommendedSongs:[],
-            trendingSongs:[],
-            AllSongs:[],
-            artists:[],
+    cleanupAfterLogoutUser: () => {
+        set({
+            nextCursor: null,
+            likedSongsId: [],
+            recentlyPlayedSongs: [],
+            recentSongs: [],
+            recommendedNextCursor: null,
+            recommendedSongs: [],
+            trendingSongs: [],
+            AllSongs: [],
+            artists: [],
+            userPlaylists: [],
         })
     },
 
-    setCurrentArtist:(artist:artist)=>{
-        set({currentArtist:artist})
+    setCurrentArtist: (artist: artist) => {
+        set({ currentArtist: artist })
     },
 
-    getCurrentArtistSongs:async(artistId:string)=>{
+    getCurrentArtistSongs: async (artistId: string) => {
 
-        set({isGettingCurrentArtistSongs:true})
+        set({ isGettingCurrentArtistSongs: true })
 
         try {
             const res = await axiosInstance.get(`/api/v1/user/artistongs/${artistId}`)
 
-            set({currentArtistSongs:res.data.songs})
+            set({ currentArtistSongs: res.data.songs })
         } catch (error) {
-            
-        }finally{
-            set({isGettingCurrentArtistSongs:false})
+
+        } finally {
+            set({ isGettingCurrentArtistSongs: false })
         }
-    }
+    },
+
+    createPlalist: async (playlistName, description, isPublic) => {
+        set({ isCreatingPlaylist: true })
+        const { userPlaylists } = get();
+        try {
+            const res = await axiosInstance.post("/api/v1/user/create-playlist", { playlistName, description, isPublic })
+
+            set({ userPlaylists: [res.data.playlist, ...userPlaylists] })
+            toast.success("playlist created successfully")
+        } catch (error) {
+            let errorMessage: string = "error while creating playlist"
+            if (error instanceof AxiosError) {
+                errorMessage = error.response?.data?.message ?? error.message;
+                toast.error(errorMessage)
+            }
+        } finally {
+            set({ isCreatingPlaylist: false })
+        }
+
+    },
+    getMyPlaylist: async () => {
+        set({ isgettingMyPlaylists: true });
+        try {
+            const res = await axiosInstance.get(`/api/v1/user/getmy-playlists`);
+            set({ userPlaylists: res.data.playlists })
+        } catch (error) {
+
+        } finally {
+            set({ isgettingMyPlaylists: false });
+        }
+    },
+
+    setCurrentPlaylist: (playlist) => {
+        set({ currentPlaylistView: playlist })
+    },
+
+    getCurrentPlaylistSongs: async (playlistId) => {
+        set({ isGettingPlaylistSongs: true })
+        try {
+            const res = await axiosInstance.get(`/api/v1/user/getplaylistsongs/${playlistId}`)
+            set({ currentPlaylistSongs: res.data.songs })
+        } catch (error) {
+            toast.error("error while fetching playlist songs")
+        } finally {
+            set({ isGettingPlaylistSongs: false })
+        }
+
+    },
+    addPlaylistSongs: async (playlistId, song) => {
+        const { AllSongs, currentPlaylistSongs } = get();
+
+        if (currentPlaylistSongs.some((s) => s.song_id === song.song_id)) {
+            toast.warn("Song is already in your playlist");
+            set({ AllSongs: AllSongs.filter((s) => s.song_id !== song.song_id) });
+            return;
+        }
+
+        set({ isAddingPlaylistSongs: true });
+
+        try {
+            await axiosInstance.post("/api/v1/user/addplaylist-songs", {
+                playlistId,
+                songId: song.song_id,
+            });
+
+            set({
+                AllSongs: AllSongs.filter((s) => s.song_id !== song.song_id),
+                currentPlaylistSongs: [...currentPlaylistSongs, song], // keep in sync
+            });
+
+            toast.success("Song added to playlist");
+
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                const message = error.response?.data?.message ?? "Error while adding song";
+                toast.error(message);
+            }
+        } finally {
+            set({ isAddingPlaylistSongs: false });
+        }
+    },
 
 }));

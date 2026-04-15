@@ -1,20 +1,29 @@
 
 export interface song{
     isLiked:boolean;
-    song_id:string,
-    song_title:string,
-    song_url:string,
-    artist:artist,
-    cover_image_url:string,
-    release_date:string,
-    size:number
+    song_id:string;
+    song_title:string;
+    song_url:string;
+    artist:artist;
+    cover_image_url:string;
+    release_date:string;
+    size:number;
 }
 
 export interface artist{
-    artist_id:string,
-    artist_bio:string,
-    artist_name:string,
-    artist_profilePic:string
+    artist_id:string;
+    artist_bio:string;
+    artist_name:string;
+    artist_profilePic:string;
+}
+
+export interface playlist{
+    playlist_id:string;
+    playlist_name:string;
+    description:string|null|undefined;
+    created_at:string;
+    is_public:boolean;
+    songCount:number;
 }
 
 
@@ -36,7 +45,14 @@ export interface userStoreT {
     likedSongsId:string[];
     currentArtist:artist | null;
     isGettingCurrentArtistSongs:boolean;
-    currentArtistSongs:song[],
+    currentArtistSongs:song[];
+    userPlaylists:playlist[];
+    isCreatingPlaylist:boolean;
+    isgettingMyPlaylists:boolean;
+    currentPlaylistView:playlist|null|undefined;
+    currentPlaylistSongs:song[];
+    isGettingPlaylistSongs:boolean;
+    isAddingPlaylistSongs:boolean;
 
 
     getRecentSongs: (limit:number | null) => Promise<void>;
@@ -50,5 +66,10 @@ export interface userStoreT {
     cleanupAfterLogoutUser:()=>void;
     setCurrentArtist:(artist:artist)=>void;
     getCurrentArtistSongs:(artistId:string)=>Promise<void>;
-
+    createPlalist:(playlistName:string,description:string,isPublic:boolean)=>Promise<void>;
+    getMyPlaylist:()=>Promise<void>;
+    setCurrentPlaylist:(data:playlist)=>void;
+    getCurrentPlaylistSongs:(playlistId:string)=>Promise<void>;
+    getAllSongs:()=>void;
+    addPlaylistSongs:(playlistId:string,song:song)=>Promise<void>;
 }

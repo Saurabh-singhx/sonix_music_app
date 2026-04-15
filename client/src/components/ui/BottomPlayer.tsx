@@ -134,7 +134,7 @@ export const BottomPlayer: React.FC<BottomPlayerProps> = ({
                 {/* Interactive progress bar */}
                 <div
                     ref={progressBarRef}
-                    className="h-2 bg-white/10 cursor-pointer relative overflow-hidden"
+                    className="h-2 bg-white/10 cursor-pointer relative overflow-hidden z-10"
                     onClick={handleClick}
                     onMouseDown={handleInteractionStart}
                     onTouchStart={handleInteractionStart}

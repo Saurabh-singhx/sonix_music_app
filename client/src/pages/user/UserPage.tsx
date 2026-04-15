@@ -9,7 +9,7 @@ import { useOutletContext } from 'react-router-dom';
 import { AllSongsSkeletonShimmer } from '@/skeletons/user/AllSongsSectionSkeleton';
 import { ArtistsSkeletonShimmer } from '@/skeletons/user/ArtistSectionSkeleton';
 import { TrendingSkeletonShimmer } from '@/skeletons/user/TrendingSectionSkeleton';
-
+import { PlaylistSection } from '@/components/section/PlaylistSection';
 interface LayoutContext{
   playing: boolean;
   progress: number;
@@ -21,9 +21,6 @@ export default function UserPage() {
   const { playing, progress } = useOutletContext<LayoutContext>();
 
   const { recommendedSongs,isGettingSongs,isGettingArtistsList,isGettingTrendingSongs,recentlyPlayedSongs} = useUserStore();
-
-
-  
 
   return (
     <div className="min-h-screen bg-card text-white selection:bg-white selection:text-black font-sans overflow-hidden">
@@ -41,6 +38,7 @@ export default function UserPage() {
               transition={{ duration: 0.3 }}
             >
               
+              <PlaylistSection/>
               {
                 recentlyPlayedSongs?.length >= 1 &&(<RecentlyPlayedSection />)
               }

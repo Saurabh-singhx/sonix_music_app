@@ -177,7 +177,7 @@ export const LimitReachedModal: React.FC<LimitReachedModalProps> = ({
                     Limit Reached
                   </h2>
                   <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-xs mx-auto">
-                    You've reached your monthly usage limit. Create a free account to unlock unlimited access.
+                    You've reached your limit. Create a free account to unlock unlimited access.
                   </p>
                 </motion.div>
 

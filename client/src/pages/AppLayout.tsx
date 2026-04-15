@@ -12,7 +12,7 @@ const AppLayout = () => {
 
     const { playing, progress, toggle, next, prev, currentTrack, duration, seek, currentTime,setIsSeeking,setProgress } = useGlobalPlayer();
     const [isExpanded, setIsExpanded] = useState(false);
-    const { isLimitReached, setisLimitReached, getRecentSongs, getArtistList, getRecommendedSongs, getTrendingSongs, } = useUserStore()
+    const { isLimitReached, setisLimitReached, getRecentSongs, getArtistList, getRecommendedSongs, getTrendingSongs,getMyPlaylist } = useUserStore()
     const { authUser } = useAuthStore();
     const { logout } = useAuthStore();
     // const [songsDataLimit, setSongsDataLimit] = useState(10)
@@ -34,6 +34,7 @@ const AppLayout = () => {
         getArtistList();
         getRecommendedSongs(10);
         getTrendingSongs();
+        getMyPlaylist()
     }, [])
 
     return (

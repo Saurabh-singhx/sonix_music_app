@@ -10,6 +10,10 @@ function Navbar() {
   const handleNavigation =()=>{
     navigate("/")
   }
+
+  const handleNavigateToProfile=()=>{
+    navigate("/profile")
+  }
   return (
     <div className='fixed top-0 left-0 right-0 z-50 h-20 w-full border-b border-white/10 bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 md:px-12 lg:px-28 text-white shadow-2xl shadow-primary/5'>
       
@@ -36,6 +40,7 @@ function Navbar() {
       <div className='transform hover:scale-105 transition-transform duration-200 ease-out'>
         <ProfileMenu 
           onLogoutClick={logout} 
+          onProfileClick={handleNavigateToProfile}
           profileImageUrl={authUser?.user_profile_pic} 
         />
       </div>

@@ -9,6 +9,7 @@ import AnimatedList from '@/components/ui/AnimatedList';
 import type { song } from '@/types/user.types';
 import { usePlayerStore } from '@/store/player/player.store';
 import { useOutletContext } from 'react-router-dom';
+import MusicLoader from '@/components/ui/Loader';
 
 /**
  * SpotlightCard: A wrapper that adds a dynamic spotlight effect on hover
@@ -90,17 +91,17 @@ const MagneticButton = ({ children, className, onClick }: { children: React.Reac
     );
 };
 
-interface LayoutContext{
-  playing: boolean;
-  currentTime:string;
-  duration:number;
+interface LayoutContext {
+    playing: boolean;
+    currentTime: string;
+    duration: number;
 };
 
 export default function ArtistProfilePage() {
     const [isFollowing, setIsFollowing] = useState(false);
-    const { currentArtist, getCurrentArtistSongs,currentArtistSongs} = useUserStore();
-    const {setCurrent,setQueue} = usePlayerStore();
-    const { playing,currentTime,duration} = useOutletContext<LayoutContext>();
+    const { currentArtist, getCurrentArtistSongs, currentArtistSongs,isGettingCurrentArtistSongs } = useUserStore();
+    const { setCurrent, setQueue } = usePlayerStore();
+    const { playing, currentTime, duration } = useOutletContext<LayoutContext>();
 
     useEffect(() => {
 
@@ -111,16 +112,22 @@ export default function ArtistProfilePage() {
     }, [currentArtist])
 
     const handleplayer = (item: song) => {
-            setQueue(currentArtistSongs)
-            setCurrent(item)
-            // console.log(playing);
-        }
+        setQueue(currentArtistSongs)
+        setCurrent(item)
+        // console.log(playing);
+    }
+
+    if(isGettingCurrentArtistSongs){
+        return(
+            <MusicLoader/>
+        )
+    }
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-white/20 selection:text-white flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-white/20 selection:text-white flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden mt-15">
 
             {/* Background Ambience */}
-            
+
 
             {/* Main Card Container - Full Width, 20-30% Height */}
             <div className="w-full z-10">

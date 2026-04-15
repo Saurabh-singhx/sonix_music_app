@@ -3,9 +3,7 @@ import type { ReactNode, MouseEventHandler, UIEvent } from "react";
 import { motion, useInView } from 'motion/react';
 import './AnimatedList.css';
 import type { song } from "@/types/user.types";
-import { usePlayerStore } from "@/store/player/player.store";
 import { formattedDate } from "@/helpers/user.helpers";
-import { Button } from "@mui/material";
 interface AnimatedItemProps {
   children: ReactNode;
   delay?: number;
@@ -76,8 +74,6 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
-  const { currentSongindex } = usePlayerStore();
-
   const handleItemClick = useCallback(
     (item: song, index: number) => {
       setSelectedIndex(index);

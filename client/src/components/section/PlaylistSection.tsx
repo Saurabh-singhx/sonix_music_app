@@ -6,15 +6,6 @@ import { useUserStore } from "@/store/user/user.store";
 import { useNavigate } from "react-router-dom";
 import type { playlist } from "@/types/user.types";
 
-interface Playlist {
-  id: string;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  coverUrl?: string;
-  songCount: number;
-  createdAt: string;
-}
 
 interface CreatePlaylistForm {
   name: string;

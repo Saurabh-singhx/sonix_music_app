@@ -8,7 +8,6 @@ import {
   Trash2,
   ChevronLeft,
   Search,
-  Filter,
   ListMusic,
 
   X,
@@ -24,113 +23,6 @@ import type { song } from "@/types/user.types";
 import { usePlayerStore } from "@/store/player/player.store";
 import { useAuthStore } from "@/store/auth/auth.store";
 
-// Types
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: number; // in seconds
-  coverUrl: string;
-  addedAt: string;
-}
-
-interface Playlist {
-  id: string;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  coverUrl?: string;
-  songs: Song[];
-  createdBy: string;
-  createdAt: string;
-  likes: number;
-}
-
-// Mock data
-const mockPlaylist: Playlist = {
-  id: "1",
-  name: "Chill Vibes",
-  description: "Perfect playlist for relaxing, working, or just vibing. Curated with the best lo-fi and chill tracks.",
-  isPublic: true,
-  createdBy: "Alex Chen",
-  createdAt: "2024-01-15",
-  likes: 1234,
-  songs: [
-    {
-      id: "1",
-      title: "Midnight City",
-      artist: "M83",
-      album: "Hurry Up, We're Dreaming",
-      duration: 243,
-      coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop",
-      addedAt: "2024-01-20",
-    },
-    {
-      id: "2",
-      title: "Nightcall",
-      artist: "Kavinsky",
-      album: "OutRun",
-      duration: 258,
-      coverUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop",
-      addedAt: "2024-01-22",
-    },
-    {
-      id: "3",
-      title: "Instant Crush",
-      artist: "Daft Punk ft. Julian Casablancas",
-      album: "Random Access Memories",
-      duration: 337,
-      coverUrl: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=300&h=300&fit=crop",
-      addedAt: "2024-02-01",
-    },
-    {
-      id: "4",
-      title: "The Less I Know The Better",
-      artist: "Tame Impala",
-      album: "Currents",
-      duration: 216,
-      coverUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=300&fit=crop",
-      addedAt: "2024-02-05",
-    },
-    {
-      id: "5",
-      title: "Electric Feel",
-      artist: "MGMT",
-      album: "Oracular Spectacular",
-      duration: 229,
-      coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop",
-      addedAt: "2024-02-10",
-    },
-    {
-      id: "6",
-      title: "Do I Wanna Know?",
-      artist: "Arctic Monkeys",
-      album: "AM",
-      duration: 272,
-      coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop",
-      addedAt: "2024-02-15",
-    },
-    {
-      id: "7",
-      title: "Sweater Weather",
-      artist: "The Neighbourhood",
-      album: "I Love You.",
-      duration: 240,
-      coverUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-      addedAt: "2024-03-01",
-    },
-    {
-      id: "8",
-      title: "R U Mine?",
-      artist: "Arctic Monkeys",
-      album: "AM",
-      duration: 201,
-      coverUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=300&fit=crop",
-      addedAt: "2024-03-05",
-    },
-  ],
-};
 
 // Utility functions
 // const formatDuration = (seconds: number) => {

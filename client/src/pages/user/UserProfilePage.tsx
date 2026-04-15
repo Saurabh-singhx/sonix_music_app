@@ -179,7 +179,7 @@ export default function UserProfilePage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neutral-800/20 rounded-full blur-[150px]" />
         <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[60%] h-[60%] bg-neutral-900/30 rounded-full blur-[200px]" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 brightness-100 contrast-150 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[32px_32px]"></div>
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -191,7 +191,7 @@ export default function UserProfilePage() {
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/60">
               Profile
             </h1>
             <p className="text-neutral-400 mt-1">Manage your account and preferences</p>
@@ -218,7 +218,7 @@ export default function UserProfilePage() {
               <div className="flex flex-col items-center text-center">
                 {/* Profile Picture */}
                 <div className="relative group mb-6">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-white/20 via-white/10 to-white/20 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
+                  <div className="absolute -inset-2 bg-linear-to-r from-white/20 via-white/10 to-white/20 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
                     <img 
                       src={userData.profilePic} 
@@ -345,17 +345,17 @@ export default function UserProfilePage() {
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
                   <Heart className="w-8 h-8 text-white mb-3" />
                   <p className="text-3xl font-bold text-white mb-1">{userData.totalSongsLiked.toLocaleString()}</p>
                   <p className="text-sm text-neutral-400">Songs Liked</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
                   <ListMusic className="w-8 h-8 text-white mb-3" />
                   <p className="text-3xl font-bold text-white mb-1">{userData.totalPlaylistsCreated}</p>
                   <p className="text-sm text-neutral-400">Playlists Created</p>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
                   <Music className="w-8 h-8 text-white mb-3" />
                   <p className="text-3xl font-bold text-white mb-1">1,247</p>
                   <p className="text-sm text-neutral-400">Hours Listened</p>

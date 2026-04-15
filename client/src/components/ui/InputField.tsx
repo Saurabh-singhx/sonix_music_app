@@ -1,7 +1,5 @@
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { motion } from 'framer-motion';
-
 /**
  * Input Field Component with Floating Label
  */

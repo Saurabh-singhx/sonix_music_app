@@ -2,10 +2,11 @@ import { Request, Response } from "express";
 import prisma from "../../lib/prisma.js";
 import { authUser } from "../../types/request/auth.js";
 import { getFileUrl } from "../../services/s3.services.js";
-import { plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
+import { addPlaylistSongsBody, plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
 import { fixIsLikedInsong, fixIsLikedInsongSimple, songsWithUrl } from "../../helpers/user.helpers.js";
+import { Prisma } from "../../generated/prisma/client.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
 
@@ -160,45 +161,45 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
   const user = req.user as authUser | undefined;
   try {
 
-      const trendingSongs = await prisma.trendingSongs.findMany({
-        take: 10,
-        orderBy: {
-          rank: "asc"
-        },
-        select: {
-          rank: true,
-          score: true,
-          song: {
-            select: {
-              song_id: true,
-              song_title: true,
-              song_url: true,
-              cover_image_url: true,
-              release_date: true,
-              size: true,
-              artist: {
-                select: {
-                  artist_id: true,
-                  artist_bio: true,
-                  artist_name: true,
-                  artist_profilePic: true,
-                },
+    const trendingSongs = await prisma.trendingSongs.findMany({
+      take: 10,
+      orderBy: {
+        rank: "asc"
+      },
+      select: {
+        rank: true,
+        score: true,
+        song: {
+          select: {
+            song_id: true,
+            song_title: true,
+            song_url: true,
+            cover_image_url: true,
+            release_date: true,
+            size: true,
+            artist: {
+              select: {
+                artist_id: true,
+                artist_bio: true,
+                artist_name: true,
+                artist_profilePic: true,
               },
-              ...(user && {
-                likedByUsers: {
-                  where: {
-                    user_id: user.user_id
-                  },
-                  select: {
-                    user_id: true
-                  }
-                }
-              })
             },
-          }
+            ...(user && {
+              likedByUsers: {
+                where: {
+                  user_id: user.user_id
+                },
+                select: {
+                  user_id: true
+                }
+              }
+            })
+          },
         }
+      }
 
-      });
+    });
 
     const fixedTrendingSongs = fixIsLikedInsong(trendingSongs)
 
@@ -245,16 +246,16 @@ export const createPlaylist = async (req: Request<{}, {}, plalistDetails>, res: 
         description: description,
         is_public: isPublic
       },
-      select:{
-        playlist_id:true,
-        playlist_name:true,
-        description:true,
-        is_public:true,
-        created_at:true,
+      select: {
+        playlist_id: true,
+        playlist_name: true,
+        description: true,
+        is_public: true,
+        created_at: true,
       }
     });
 
-    const playlist = {...newPlaylist,songCount:0}
+    const playlist = { ...newPlaylist, songCount: 0 }
 
     res.status(201).json({ message: "playlist created successfully", playlist })
 
@@ -415,15 +416,15 @@ export const getPlaylistSongs = async (req: Request, res: Response) => {
               },
             },
             ...(user && {
-                likedByUsers: {
-                  where: {
-                    user_id: user.user_id
-                  },
-                  select: {
-                    user_id: true
-                  }
+              likedByUsers: {
+                where: {
+                  user_id: user.user_id
+                },
+                select: {
+                  user_id: true
                 }
-              })
+              }
+            })
           },
         }
       }
@@ -432,13 +433,59 @@ export const getPlaylistSongs = async (req: Request, res: Response) => {
     const fixedPlaylistSongs = fixIsLikedInsong(playlistSongs);
     const PlaylistSongsWithurl = await songsWithUrl(fixedPlaylistSongs);
 
-    res.status(200).json({ message: "playlist song fetched successfully", songs:PlaylistSongsWithurl })
+    res.status(200).json({ message: "playlist song fetched successfully", songs: PlaylistSongsWithurl })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
 
+export const addPlaylistSongs = async (req: Request<{}, {}, addPlaylistSongsBody>, res: Response) => {
+  const { playlistId, songId } = req.body;
+  const user = req.user as authUser;
+
+  if (!playlistId || !songId) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Single query: checks existence + ownership together
+      await tx.playlist.findUniqueOrThrow({
+        where: { playlist_id: playlistId, user_id: user.user_id },
+        select: { playlist_id: true } // fetch minimum data
+      });
+
+      const lastSong = await tx.playlistSong.aggregate({
+        where: { playlist_id: playlistId },
+        _max: { position: true }
+      });
+
+      await tx.playlistSong.create({
+        data: {
+          playlist_id: playlistId,
+          song_id: songId,
+          position: (lastSong._max.position ?? 0) + 1
+        }
+      });
+    });
+
+    return res.status(200).json({ message: "Song added successfully" });
+
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2002':
+          return res.status(409).json({ message: "Song is already in playlist" });
+        case 'P2025':
+          // findUniqueOrThrow throws this when record not found
+          return res.status(404).json({ message: "Playlist not found" });
+      }
+    }
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 // user-artists-controllers ==----==>
 export const getArtists = async (req: Request, res: Response) => {

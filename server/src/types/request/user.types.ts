@@ -8,3 +8,8 @@ export interface userSongEventPayload{
     songId:string,
     duration:number
 }
+
+export  interface addPlaylistSongsBody{
+    songId:string,
+    playlistId:string
+}

@@ -491,6 +491,27 @@ export const getplaylistsongsLimiter = rateLimit({
 
 });
 
+export const addPlaylistSongsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) => { return ipKeyGenerator(req.ip!) },
+
+  store: new RedisStore({
+    prefix: "rl:addPlaylistSongs:",
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
+
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Try again after 15 minute."
+    });
+  },
+
+});
+
 export const getartistsByUserLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 60,

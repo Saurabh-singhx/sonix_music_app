@@ -1,8 +1,8 @@
 import express from "express";
 import { protectRoute, validate } from "../../middleware/auth.middleware.js";
-import { createPlaylist, getAllPlaylist, getAllRecentSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistSongs, getPublicPlaylists, getRecommendedSongs, getTrendingSongs, likeSong, updateSongEvent } from "./user.controllers.js";
+import { addPlaylistSongs, createPlaylist, getAllPlaylist, getAllRecentSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistSongs, getPublicPlaylists, getRecommendedSongs, getTrendingSongs, likeSong, updateSongEvent } from "./user.controllers.js";
 import { createPlaylistValidator, getPlaylistsSongsValidator, validateSongEvent } from "./validations/user.validators.js";
-import { createplaylistLimiter, getallplaylistsLimiter, getAllRecentSongsLimiter, getartistsByUserLimiter, getArtistsSongsByUserLimiter, getmyplaylistsLimiter, getplaylistsongsLimiter, getpublicplaylistsLimiter, getRecommendedSongsLimiter, getTrendingSongsLimiter, likedSongLimiter, updateSongEventLimiter } from "../../middleware/ratelimit.js";
+import { addPlaylistSongsLimiter, createplaylistLimiter, getallplaylistsLimiter, getAllRecentSongsLimiter, getartistsByUserLimiter, getArtistsSongsByUserLimiter, getmyplaylistsLimiter, getplaylistsongsLimiter, getpublicplaylistsLimiter, getRecommendedSongsLimiter, getTrendingSongsLimiter, likedSongLimiter, updateSongEventLimiter } from "../../middleware/ratelimit.js";
 
 const router = express.Router();
 
@@ -58,6 +58,11 @@ router.get("/getplaylistsongs/:playlistId",
     protectRoute,
     getPlaylistSongs
 );
+router.post("/addplaylist-songs",
+    addPlaylistSongsLimiter,
+    protectRoute,
+    addPlaylistSongs
+)
 
 // artist details routes ==----==>
 router.get("/getartists",

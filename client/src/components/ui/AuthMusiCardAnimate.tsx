@@ -1,6 +1,8 @@
 import {motion} from "framer-motion"
 import { Disc } from 'lucide-react'
 import { VisualizerBar } from "./VisualizerBar"
+import authMain from "@/assets/music-auth.jpeg"
+import profiles from "@/assets/profile.jpeg"
 
 function AuthMusiCard() {
   return (
@@ -39,7 +41,7 @@ function AuthMusiCard() {
               >
                 <div className="w-56 h-56 rounded-full bg-linear-to-br from-indigo-900/50 to-purple-900/50 flex items-center justify-center overflow-hidden">
                   <img
-                    src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000&auto=format&fit=crop"
+                    src={authMain}
                     alt="Album Art"
                     className="w-full h-full object-cover opacity-80"
                   />
@@ -62,7 +64,7 @@ function AuthMusiCard() {
             <div className="flex -space-x-2">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" className="w-full h-full" />
+                  <img src={profiles} alt="User" className="w-full h-full" />
                 </div>
               ))}
             </div>

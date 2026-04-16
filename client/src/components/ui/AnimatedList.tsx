@@ -152,7 +152,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
 
   return (
     <div className={`scroll-list-container ${className}`}>
-      <div ref={listRef} className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} ${playlistSelect? 'min-h-auto':'min-h-90vh'}`} onScroll={handleScroll}>
+      <div ref={listRef}className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} h-[100%]`} onScroll={handleScroll}>
         {items?.map((track, index) => {
           const isActive =  selectedIndex === index;
           return (

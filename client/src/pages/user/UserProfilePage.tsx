@@ -335,48 +335,7 @@ export default function UserProfilePage() {
               </div>
             </SpotlightCard>
 
-            {/* Music Preferences */}
-            <SpotlightCard className="p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-white/10">
-                  <Music className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-white">Music Statistics</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
-                  <Heart className="w-8 h-8 text-white mb-3" />
-                  <p className="text-3xl font-bold text-white mb-1">{userData.totalSongsLiked.toLocaleString()}</p>
-                  <p className="text-sm text-neutral-400">Songs Liked</p>
-                </div>
-                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
-                  <ListMusic className="w-8 h-8 text-white mb-3" />
-                  <p className="text-3xl font-bold text-white mb-1">{userData.totalPlaylistsCreated}</p>
-                  <p className="text-sm text-neutral-400">Playlists Created</p>
-                </div>
-                <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-transparent border border-white/10">
-                  <Music className="w-8 h-8 text-white mb-3" />
-                  <p className="text-3xl font-bold text-white mb-1">1,247</p>
-                  <p className="text-sm text-neutral-400">Hours Listened</p>
-                </div>
-              </div>
-
-              {/* Top Genres */}
-              <div className="mt-6">
-                <p className="text-sm text-neutral-400 mb-3">Top Genres</p>
-                <div className="flex flex-wrap gap-2">
-                  {['Electronic', 'Ambient', 'Jazz', 'Classical', 'Lo-Fi'].map((genre) => (
-                    <span 
-                      key={genre}
-                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-neutral-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </SpotlightCard>
+            
 
           </div>
         </div>

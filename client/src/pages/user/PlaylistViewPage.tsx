@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import {
   Play,
   MoreHorizontal,
@@ -31,10 +31,10 @@ import { useAuthStore } from "@/store/auth/auth.store";
 //   return `${mins}:${secs.toString().padStart(2, "0")}`;
 // };
 
-interface LayoutContext{
+interface LayoutContext {
   playing: boolean;
-  currentTime:string;
-  duration:number;
+  currentTime: string;
+  duration: number;
 };
 
 export const PlaylistViewPage = () => {
@@ -43,10 +43,10 @@ export const PlaylistViewPage = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [songAdd, setSongAdd] = useState(false)
-  const { currentPlaylistView, currentPlaylistSongs,isGettingPlaylistSongs,AllSongs,addPlaylistSongs} = useUserStore();
-  const {authUser} = useAuthStore();
-  const {setCurrent} = usePlayerStore();
-  const { playing,currentTime,duration} = useOutletContext<LayoutContext>();
+  const { currentPlaylistView, currentPlaylistSongs, isGettingPlaylistSongs, AllSongs, addPlaylistSongs } = useUserStore();
+  const { authUser } = useAuthStore();
+  const { setCurrent } = usePlayerStore();
+  const { playing, currentTime, duration } = useOutletContext<LayoutContext>();
 
   const [editForm, setEditForm] = useState({
     name: currentPlaylistView?.playlist_name,
@@ -70,19 +70,19 @@ export const PlaylistViewPage = () => {
       console.log("Delete playlist");
     }
   };
-  const handleplayer= (item:song)=>{
+  const handleplayer = (item: song) => {
     setCurrent(item)
   }
 
-  const handleAddPlaylistSongs = (item:song)=>{
-    if(!currentPlaylistView){
+  const handleAddPlaylistSongs = (item: song) => {
+    if (!currentPlaylistView) {
       return;
     }
-    addPlaylistSongs(currentPlaylistView?.playlist_id,item)
+    addPlaylistSongs(currentPlaylistView?.playlist_id, item)
   }
 
   return (
-    <div className="min-h-screen bg-black pb-32">
+    <div className={`h-auto overflow-hidden bg-black flex flex-col`}>
       {/* Sticky Header - appears on scroll */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
@@ -146,7 +146,7 @@ export const PlaylistViewPage = () => {
         </div>
       </motion.header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         {/* Hero Section */}
         <section className="py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
@@ -158,9 +158,9 @@ export const PlaylistViewPage = () => {
               className="relative shrink-0 mx-auto sm:mx-0"
             >
               <div className="w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-2xl overflow-hidden shadow-2xl bg-linear-to-br from-zinc-800 to-zinc-900">
-                 <div className="w-full h-full flex items-center justify-center">
-                    <ListMusic className="w-24 h-24 text-zinc-600" />
-                  </div>
+                <div className="w-full h-full flex items-center justify-center">
+                  <ListMusic className="w-24 h-24 text-zinc-600" />
+                </div>
               </div>
 
               {/* Floating play button on mobile */}
@@ -274,23 +274,21 @@ export const PlaylistViewPage = () => {
             {
               !songAdd ? (
                 <button
-                onClick={()=>setSongAdd(true)}
-                className="bg-white text-primary-foreground border-2 border-white px-4 py-2 rounded-3xl">Add Songs</button>
-              ):(<button 
-                onClick={()=>setSongAdd(false)}
+                  onClick={() => setSongAdd(true)}
+                  className="bg-white text-primary-foreground border-2 border-white px-4 py-2 rounded-3xl">Add Songs</button>
+              ) : (<button
+                onClick={() => setSongAdd(false)}
                 className="bg-white text-primary-foreground border-2 border-white px-4 py-2 rounded-3xl">Save</button>)
             }
-            
+
           </div>
         </motion.section>
 
         {/* Songs List */}
-        
 
-        {
-          songAdd ? (
-            <AnimatedList
-          items={AllSongs}
+
+        <AnimatedList
+          items={songAdd ? AllSongs : currentPlaylistSongs}
           onItemSelect={(item) => handleplayer(item)}
           showGradients
           enableArrowNavigation
@@ -298,22 +296,10 @@ export const PlaylistViewPage = () => {
           duration={duration}
           playing={playing}
           loading={isGettingPlaylistSongs}
-          playlistSelect={true}
-          onPlaylistSongAdd={(item)=>handleAddPlaylistSongs(item)}
+          displayScrollbar
+          playlistSelect={songAdd}
+          onPlaylistSongAdd={(item) => handleAddPlaylistSongs(item)}
         />
-          ):(
-            <AnimatedList
-          items={currentPlaylistSongs}
-          onItemSelect={(item) => handleplayer(item)}
-          showGradients
-          enableArrowNavigation
-          currentTime={currentTime}
-          duration={duration}
-          playing={playing}
-          loading={isGettingPlaylistSongs}
-        />
-          )
-        }
 
       </div>
 

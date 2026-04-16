@@ -317,9 +317,12 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     },
     getMyPlaylist: async () => {
         set({ isgettingMyPlaylists: true });
+        const { authUser } = useAuthStore.getState();
         try {
-            const res = await axiosInstance.get(`/api/v1/user/getmy-playlists`);
-            set({ userPlaylists: res.data.playlists })
+            if (authUser?.role === "USER") {
+                const res = await axiosInstance.get(`/api/v1/user/getmy-playlists`);
+                set({ userPlaylists: res.data.playlists })
+            }
         } catch (error) {
 
         } finally {

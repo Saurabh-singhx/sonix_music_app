@@ -24,7 +24,7 @@ const AllSongsPage = () => {
         getRecentSongs(10)
     }
     return (
-        <div className="pt-20">
+        <div className="pt-20 h-screen overflow-y-hidden">
 
             <AnimatedList
                 className=""

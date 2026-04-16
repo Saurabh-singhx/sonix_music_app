@@ -10,6 +10,7 @@ import { AllSongsSkeletonShimmer } from '@/skeletons/user/AllSongsSectionSkeleto
 import { ArtistsSkeletonShimmer } from '@/skeletons/user/ArtistSectionSkeleton';
 import { TrendingSkeletonShimmer } from '@/skeletons/user/TrendingSectionSkeleton';
 import { PlaylistSection } from '@/components/section/PlaylistSection';
+import { useAuthStore } from '@/store/auth/auth.store';
 interface LayoutContext{
   playing: boolean;
   progress: number;
@@ -19,13 +20,13 @@ export default function UserPage() {
 
   
   const { playing, progress } = useOutletContext<LayoutContext>();
-
+  const {authUser} = useAuthStore();
   const { recommendedSongs,isGettingSongs,isGettingArtistsList,isGettingTrendingSongs,recentlyPlayedSongs} = useUserStore();
 
   return (
     <div className="min-h-screen bg-card text-white selection:bg-white selection:text-black font-sans overflow-hidden">
 
-      <div className="relative z-10 max-w-8xl mx-auto px-5 sm:px-4 lg:px-8 py-8 pb-32 mt-20">
+      <div className="relative z-10 max-w-8xl mx-auto px-5 sm:px-4 lg:px-8 py-8 pb-10 mt-20">
 
         {/* Main Content - Routed Views */}
         <main className="min-h-[60vh]">
@@ -38,7 +39,11 @@ export default function UserPage() {
               transition={{ duration: 0.3 }}
             >
               
-              <PlaylistSection/>
+              {
+                authUser?.role === "USER" &&(
+                  <PlaylistSection/>
+                )
+              }
               {
                 recentlyPlayedSongs?.length >= 1 &&(<RecentlyPlayedSection />)
               }

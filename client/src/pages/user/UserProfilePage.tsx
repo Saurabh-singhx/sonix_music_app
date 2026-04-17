@@ -21,7 +21,6 @@ import MusicLoader from '@/components/ui/Loader';
 import profileImage from '@/assets/profile.jpeg'
 import type { artistGetUrlPayload } from '@/types/admin.types';
 import { useAuthStore } from '@/store/auth/auth.store';
-import { useAdminStore } from '@/store/admin/admin.store';
 
 export interface profileDetails {
   user_id: string,

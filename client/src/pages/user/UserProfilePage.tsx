@@ -1,12 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { 
-  Mail, 
-  User, 
-  Calendar, 
-  Music, 
-  ListMusic, 
-  Heart,
+import {
+  Mail,
+  User,
+  Calendar,
   Edit3,
   Camera,
   Shield,
@@ -14,9 +11,30 @@ import {
   Link as LinkIcon,
   Twitter,
   Instagram,
-  Github
+  Github,
+  X,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUserStore } from '@/store/user/user.store';
+import MusicLoader from '@/components/ui/Loader';
+import profileImage from '@/assets/profile.jpeg'
+import type { artistGetUrlPayload } from '@/types/admin.types';
+import { useAuthStore } from '@/store/auth/auth.store';
+import { useAdminStore } from '@/store/admin/admin.store';
+
+export interface profileDetails {
+  user_id: string,
+  user_name: string,
+  user_email: string,
+  user_profile_pic: string,
+  date_of_birth: string,
+  gender: string,
+  created_at: string,
+  totalPlaylist: number,
+  totalSongLiked: number,
+  timeListened: number
+}
 
 /**
  * SpotlightCard: A wrapper that adds a dynamic spotlight effect on hover
@@ -62,7 +80,7 @@ const MagneticButton = ({ children, className, onClick }: { children: React.Reac
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  
+
   const springConfig = { damping: 15, stiffness: 150 };
   const springX = useSpring(x, springConfig);
   const springY = useSpring(y, springConfig);
@@ -73,7 +91,7 @@ const MagneticButton = ({ children, className, onClick }: { children: React.Reac
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     const centerX = left + width / 2;
     const centerY = top + height / 2;
-    
+
     x.set((clientX - centerX) / 4);
     y.set((clientY - centerY) / 4);
   };
@@ -98,26 +116,6 @@ const MagneticButton = ({ children, className, onClick }: { children: React.Reac
 };
 
 /**
- * StatCard: Individual statistic display
- */
-const StatCard = ({ icon: Icon, label, value, delay }: { icon: any, label: string, value: string | number, delay: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5 }}
-    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-  >
-    <div className="p-3 rounded-full bg-white/10">
-      <Icon className="w-5 h-5 text-white" />
-    </div>
-    <div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-xs text-neutral-400 uppercase tracking-wider">{label}</p>
-    </div>
-  </motion.div>
-);
-
-/**
  * InfoRow: Display label and value in a row
  */
 const InfoRow = ({ icon: Icon, label, value }: { icon: any, label: string, value: string }) => (
@@ -132,23 +130,91 @@ const InfoRow = ({ icon: Icon, label, value }: { icon: any, label: string, value
   </div>
 );
 
+/**
+ * EditableRow: Input field for editing profile data
+ */
+const EditableRow = ({
+  icon: Icon,
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  options
+}: {
+  icon: any,
+  label: string,
+  name: string,
+  value: string,
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void,
+  type?: string,
+  options?: string[]
+}) => (
+  <div className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
+    <div className="p-2 rounded-lg bg-white/5">
+      <Icon className="w-4 h-4 text-neutral-400" />
+    </div>
+    <div className="flex-1">
+      <p className="text-xs text-neutral-500 uppercase tracking-wider mb-1">{label}</p>
+      {options ? (
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          className="w-full bg-neutral-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className="w-full bg-neutral-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30 transition-colors"
+        />
+      )}
+    </div>
+  </div>
+);
+
 export default function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
+  const { myProfileDetails, getMyProfileDetails, isGettingMyProfileDetails,getProfileImageUploadUrl,updateMyProfilePic} = useUserStore();
+  const {authUser} = useAuthStore()
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Default/mock data if user is not available
-  const userData = {
-    name: 'Alex Chen',
-    email: 'alex.chen@example.com',
-    profilePic: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop',
-    gender: 'Male',
-    dateOfBirth: '1995-08-15',
-    role: 'Premium Member',
-    totalSongsLiked: 2847,
-    totalPlaylistsCreated: 42
-  };
+  // Local state for editing
+  const [editForm, setEditForm] = useState<Partial<profileDetails>>({});
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [changesInProfile, setChangesInProfile] = useState({
+    profilePic:false,
+    profileDetails:false
+  });
+  const [imageFile, setImageFile] = useState<File | null>()
 
-  // Format date
+  useEffect(() => {
+    getMyProfileDetails()
+  }, [])
+
+  // Initialize edit form when entering edit mode
+  useEffect(() => {
+    if (isEditing && myProfileDetails) {
+      setEditForm({
+        user_name: myProfileDetails.user_name,
+        date_of_birth: myProfileDetails.date_of_birth,
+        gender: myProfileDetails.gender,
+        user_profile_pic: myProfileDetails.user_profile_pic
+      });
+      setPreviewImage(myProfileDetails.user_profile_pic);
+    }
+  }, [isEditing, myProfileDetails]);
+
+  // Format date for display
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -156,23 +222,76 @@ export default function UserProfilePage() {
     });
   };
 
+  // Format date for input type="date"
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().split('T')[0];
+  };
+
   // Calculate age
   const calculateAge = (dateString: string) => {
+    if (!dateString) return 0;
     const birthDate = new Date(dateString);
     const diff = Date.now() - birthDate.getTime();
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   };
 
-  const stats = [
-    { icon: Heart, label: 'Songs Liked', value:10 },
-    { icon: ListMusic, label: 'Playlists', value: 15 },
-    { icon: Music, label: 'Hours Listened', value: '1,247' },
-    { icon: Calendar, label: 'Member Since', value: '2021' }
-  ];
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+    setChangesInProfile(prev =>({...prev,profileDetails:true}))
+  };
+
+  // Handle profile picture change
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file)
+      setChangesInProfile(prev =>({...prev,profilePic:true}))
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewImage(imageUrl);
+      setEditForm(prev => ({ ...prev, user_profile_pic: imageUrl }));
+
+      const uploadPicUrlData: artistGetUrlPayload = {
+        fileSize: file.size,
+        fileType: file.type,
+        userId: authUser?.user_id,
+        imageType: "profile",
+      };
+      getProfileImageUploadUrl(uploadPicUrlData);
+    }
+  };
+
+  // Handle save
+  const handleSave = () => {
+    
+    if(changesInProfile.profilePic){
+      if(imageFile){
+        updateMyProfilePic(imageFile)
+        console.log("profile image uploaded")
+      }
+      console.log("profile image uploaded")
+    }
+
+    console.log("Saving profile:", editForm);
+    setIsEditing(false);
+    setImageFile(null)
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditForm({});
+    setPreviewImage(null);
+  };
+
+  if (isGettingMyProfileDetails) {
+    return <MusicLoader />
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white/20 selection:text-white relative overflow-hidden mt-10">
-      
       {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neutral-800/20 rounded-full blur-[150px]" />
@@ -183,9 +302,8 @@ export default function UserProfilePage() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-8"
@@ -196,22 +314,33 @@ export default function UserProfilePage() {
             </h1>
             <p className="text-neutral-400 mt-1">Manage your account and preferences</p>
           </div>
-          <MagneticButton 
-            onClick={() => setIsEditing(!isEditing)}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border",
-              isEditing
-                ? "bg-white text-black border-white hover:bg-neutral-200"
-                : "bg-transparent text-white border-white/30 hover:bg-white/10 hover:border-white/60"
+
+          <div className="flex items-center gap-3">
+            {isEditing && (
+              <MagneticButton
+                onClick={handleCancel}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border border-white/30 text-white hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </MagneticButton>
             )}
-          >
-            <Edit3 className="w-4 h-4" />
-            {isEditing ? 'Save Changes' : 'Edit Profile'}
-          </MagneticButton>
+            <MagneticButton
+              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border",
+                isEditing
+                  ? "bg-white text-black border-white hover:bg-neutral-200"
+                  : "bg-transparent text-white border-white/30 hover:bg-white/10 hover:border-white/60"
+              )}
+            >
+              {isEditing ? <Check className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+              {isEditing ? 'Save Changes' : 'Edit Profile'}
+            </MagneticButton>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-          
           {/* Left Column: Profile Card */}
           <div className="lg:col-span-4 space-y-6">
             <SpotlightCard className="p-6 md:p-8">
@@ -220,31 +349,70 @@ export default function UserProfilePage() {
                 <div className="relative group mb-6">
                   <div className="absolute -inset-2 bg-linear-to-r from-white/20 via-white/10 to-white/20 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
-                    <img 
-                      src={userData.profilePic} 
-                      alt={userData.name}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                    />
+                    {isEditing ? (
+                      <img
+                        src={previewImage || profileImage}
+                        alt="Profile Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      myProfileDetails?.user_profile_pic ? (
+                        <img
+                          src={myProfileDetails?.user_profile_pic}
+                          alt={myProfileDetails?.user_name}
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                        />
+                      ) : (
+                        <img
+                          src={profileImage}
+                          alt="Default Profile"
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                        />
+                      )
+                    )}
                   </div>
+
                   {isEditing && (
-                    <button className="absolute bottom-2 right-2 p-2.5 rounded-full bg-white text-black shadow-lg hover:scale-110 transition-transform">
-                      <Camera className="w-4 h-4" />
-                    </button>
+                    <>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleProfilePicChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-2 right-2 p-2.5 rounded-full bg-white text-black shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
-                  {/* Role Badge */}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-1.5">
-                    <Shield className="w-3 h-3 text-white" />
-                    <span className="text-xs font-medium text-white whitespace-nowrap">{userData.role}</span>
-                  </div>
                 </div>
 
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">{userData.name}</h2>
-                <p className="text-neutral-400 text-sm mb-6">{userData.email}</p>
+                {isEditing ? (
+                  <div className="w-full mb-6">
+                    <input
+                      type="text"
+                      name="user_name"
+                      value={editForm.user_name || ''}
+                      onChange={handleInputChange}
+                      className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-2 text-xl font-bold text-white text-center focus:outline-none focus:border-white/30 transition-colors"
+                      placeholder="Your Name"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">{myProfileDetails?.user_name}</h2>
+                    <p className="text-neutral-400 text-sm mb-6">{myProfileDetails?.user_email}</p>
+                  </>
+                )}
 
                 {/* Social Links */}
                 <div className="flex items-center gap-3">
                   {[Twitter, Instagram, Github, LinkIcon].map((Icon, i) => (
-                    <MagneticButton 
+                    <MagneticButton
                       key={i}
                       className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors text-neutral-400 hover:text-white"
                     >
@@ -254,21 +422,10 @@ export default function UserProfilePage() {
                 </div>
               </div>
             </SpotlightCard>
-
-            {/* Quick Stats */}
-            <SpotlightCard className="p-6">
-              <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">Activity Overview</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {stats.map((stat, i) => (
-                  <StatCard key={i} {...stat} delay={0.1 + i * 0.1} />
-                ))}
-              </div>
-            </SpotlightCard>
           </div>
 
           {/* Right Column: Details */}
           <div className="lg:col-span-8 space-y-6">
-            
             {/* Personal Information */}
             <SpotlightCard className="p-6 md:p-8">
               <div className="flex items-center gap-3 mb-6">
@@ -277,29 +434,68 @@ export default function UserProfilePage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white">Personal Information</h3>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoRow 
-                  icon={User} 
-                  label="Full Name" 
-                  value={userData.name} 
-                />
-                <InfoRow 
-                  icon={Mail} 
-                  label="Email Address" 
-                  value={userData.email} 
-                />
-                <InfoRow 
-                  icon={User} 
-                  label="Gender" 
-                  value={userData.gender} 
-                />
-                <InfoRow 
-                  icon={Calendar} 
-                  label="Date of Birth" 
-                  value={`${formatDate(userData.dateOfBirth)} (${calculateAge(userData.dateOfBirth)} years)`} 
-                />
-              </div>
+
+              {myProfileDetails && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {isEditing ? (
+                    <>
+                      <EditableRow
+                        icon={User}
+                        label="Full Name"
+                        name="user_name"
+                        value={editForm.user_name || ''}
+                        onChange={handleInputChange}
+                      />
+                      <EditableRow
+                        icon={Mail}
+                        label="Email Address"
+                        name="user_email"
+                        value={myProfileDetails.user_email}
+                        onChange={() => { }}
+                      />
+                      <EditableRow
+                        icon={User}
+                        label="Gender"
+                        name="gender"
+                        value={editForm.gender || ''}
+                        onChange={handleInputChange}
+                        options={['Male', 'Female', 'Non-binary', 'Prefer not to say']}
+                      />
+                      <EditableRow
+                        icon={Calendar}
+                        label="Date of Birth"
+                        name="date_of_birth"
+                        value={formatDateForInput(editForm.date_of_birth || '')}
+                        onChange={handleInputChange}
+                        type="date"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <InfoRow
+                        icon={User}
+                        label="Full Name"
+                        value={myProfileDetails.user_name}
+                      />
+                      <InfoRow
+                        icon={Mail}
+                        label="Email Address"
+                        value={myProfileDetails.user_email}
+                      />
+                      <InfoRow
+                        icon={User}
+                        label="Gender"
+                        value={myProfileDetails.gender}
+                      />
+                      <InfoRow
+                        icon={Calendar}
+                        label="Date of Birth"
+                        value={`${formatDate(myProfileDetails.date_of_birth)} (${calculateAge(myProfileDetails.date_of_birth)} years)`}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
             </SpotlightCard>
 
             {/* Account Details */}
@@ -310,33 +506,61 @@ export default function UserProfilePage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white">Account Details</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoRow 
-                  icon={Shield} 
-                  label="Account Role" 
-                  value={userData.role} 
+                <InfoRow
+                  icon={Calendar}
+                  label="Member Since"
+                  value={myProfileDetails?.created_at ? formatDate(myProfileDetails.created_at) : "March 15, 2021"}
                 />
-                <InfoRow 
-                  icon={Calendar} 
-                  label="Member Since" 
-                  value="March 15, 2021" 
+                <InfoRow
+                  icon={MapPin}
+                  label="Location"
+                  value="San Francisco, CA"
                 />
-                <InfoRow 
-                  icon={MapPin} 
-                  label="Location" 
-                  value="San Francisco, CA" 
+                <InfoRow
+                  icon={LinkIcon}
+                  label="Profile URL"
+                  value={`@${myProfileDetails?.user_name?.toLowerCase().replace(/\s/g, '') || 'user'}`}
                 />
-                <InfoRow 
-                  icon={LinkIcon} 
-                  label="Profile URL" 
-                  value="@alexchen" 
+                <InfoRow
+                  icon={Shield}
+                  label="Account Status"
+                  value="Active"
                 />
               </div>
             </SpotlightCard>
 
-            
+            {/* Stats Overview */}
+            <SpotlightCard className="p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-white/10">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Activity Overview</h3>
+              </div>
 
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-2xl font-bold text-white">{myProfileDetails?.totalPlaylist || 0}</span>
+                  <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Playlists</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-2xl font-bold text-white">{myProfileDetails?.totalSongLiked || 0}</span>
+                  <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Liked Songs</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-2xl font-bold text-white">{myProfileDetails?.timeListened || 0}h</span>
+                  <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Hours Listened</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-2xl font-bold text-white">
+                    {myProfileDetails?.date_of_birth ? calculateAge(myProfileDetails.date_of_birth) : '-'}
+                  </span>
+                  <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Years Old</span>
+                </div>
+              </div>
+            </SpotlightCard>
           </div>
         </div>
       </div>

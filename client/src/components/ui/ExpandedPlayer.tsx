@@ -158,10 +158,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
           </SheetDescription>
         </SheetHeader>
         {/* Background Ambient Glow */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]" />
-          <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[100px]" />
-        </div>
+        
 
         <motion.div
           className="flex flex-col h-full relative z-10"

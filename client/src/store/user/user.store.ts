@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../../lib/axios";
 import type { artist, song, userStoreT } from "@/types/user.types";
 import { useAuthStore } from "../auth/auth.store";
-import { AxiosError } from "axios";
+import axios, { AxiosError, type AxiosProgressEvent } from "axios";
 import { toast } from "react-toastify";
 export const useUserStore = create<userStoreT>((set, get) => ({
 
@@ -32,6 +32,12 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     currentPlaylistView: null,
     isGettingPlaylistSongs: false,
     isAddingPlaylistSongs: false,
+    myProfileDetails: null,
+    isGettingMyProfileDetails:false,
+    isgettingProfileImageUploadUrl:false,
+    profileImageUploadUrl:null,
+    profileImageS3Key:null,
+    isUploadingProfileImage:false,
 
     getRecentSongs: async (limit) => {
 
@@ -377,6 +383,88 @@ export const useUserStore = create<userStoreT>((set, get) => ({
             }
         } finally {
             set({ isAddingPlaylistSongs: false });
+        }
+    },
+    getMyProfileDetails: async () => {
+        set({isGettingMyProfileDetails:true})
+
+        try {
+            const res = await axiosInstance.get("/api/v1/user/profile-details");
+
+            set({myProfileDetails:res.data.profileDetails})
+        } catch (error) {
+               if (error instanceof AxiosError) {
+                const message = error.response?.data?.message ?? "Error while fetching profile details";
+                toast.error(message);
+            }
+        }finally{
+            set({isGettingMyProfileDetails:false})
+        }
+    },
+    getProfileImageUploadUrl: async (data) => {
+        set({ isgettingProfileImageUploadUrl: true });
+        try {
+            const res = await axiosInstance.post("/api/v1/user/getimageurl", data);
+
+            set({ profileImageS3Key: res.data.result?.key });
+            set({ profileImageUploadUrl: res.data.result?.uploadUrl });
+
+        } catch (error) {
+            let errorMessage: string = "error while fetching uploaadurl"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
+        } finally {
+            set({ isgettingProfileImageUploadUrl: false });
+        }
+    },
+
+    updateMyProfilePic: async (file: File) => {
+        if (!file) {
+            toast.error("No file selected");
+            return;
+        }
+        const { profileImageUploadUrl, profileImageS3Key } = get();
+
+        if (!profileImageUploadUrl) {
+            toast.error("Upload URL missing");
+            return;
+        }
+
+        if (!profileImageS3Key ) {
+            toast.error("image is missing");
+            return;
+        }
+
+        set({ isUploadingProfileImage: true });
+
+        try {
+            await axios.put(profileImageUploadUrl, file, {
+                headers: { "Content-Type": file.type },
+                onUploadProgress: (e: AxiosProgressEvent) => {
+                    if (!e.total) return;
+                    // set({ uploadProgress: Math.round((e.loaded * 100) / e.total) });
+                },
+            });
+
+            await axiosInstance.patch("/api/v1/user/update-profile-pic", {
+                profilePic: profileImageS3Key,
+            });
+
+            toast.success("Image uploaded successfully");
+        } catch (error) {
+            let errorMessage: string = "error while uploading profile Image"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
+        } finally {
+            set({ isUploadingProfileImage: false });
+            set({ profileImageUploadUrl: "" });
+            set({ profileImageS3Key: "" });
         }
     },
 

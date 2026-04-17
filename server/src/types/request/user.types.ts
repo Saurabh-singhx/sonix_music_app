@@ -13,3 +13,9 @@ export  interface addPlaylistSongsBody{
     songId:string,
     playlistId:string
 }
+
+export interface updateMyProfileDetailsBody{
+    name:string;
+    gender:string;
+    dateOfBirth:string;
+}

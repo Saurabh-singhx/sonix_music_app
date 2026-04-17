@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import prisma from "../../lib/prisma.js";
 import { authUser } from "../../types/request/auth.js";
-import { getFileUrl } from "../../services/s3.services.js";
-import { addPlaylistSongsBody, plalistDetails, userSongEventPayload } from "../../types/request/user.types.js";
+import {createImageUploadUrl, getFileUrl } from "../../services/s3.services.js";
+import { addPlaylistSongsBody, plalistDetails, updateMyProfileDetailsBody, userSongEventPayload } from "../../types/request/user.types.js";
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
 import { fixIsLikedInsong, fixIsLikedInsongSimple, songsWithUrl } from "../../helpers/user.helpers.js";
 import { Prisma } from "../../generated/prisma/client.js";
+import { getUserProfileImgUploadUrl } from "../../types/request/admin.types.js";
 
 export const getAllRecentSongs = async (req: Request, res: Response) => {
 
@@ -212,6 +213,160 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 
+}
+
+export const getMyProfileDetails = async (req: Request, res: Response) => {
+
+  const user = req.user as authUser;
+  try {
+
+    const profileDetails = await prisma.user.findUnique({
+      where: {
+        user_id: user.user_id
+      },
+      select: {
+        user_id: true,
+        user_name: true,
+        user_email: true,
+        user_profile_pic: true,
+        date_of_birth: true,
+        gender: true,
+        created_at: true,
+        is_premium: true,
+        _count: {
+          select: {
+            playlists: true,
+            likedSongs: true,
+          }
+        }
+      }
+    });
+
+    const playduration = await prisma.userSongEvent.aggregate({
+      where: {
+        user_id: user.user_id,
+        event_type: {
+          in: ["COMPLETE", "PLAY", "REPEAT"]
+        },
+
+      },
+      _sum: {
+        play_duration: true,
+      }
+    })
+
+    let profileImageWithurl: string | undefined = "";
+    if (profileDetails?.user_profile_pic) {
+      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+    }
+
+    const fixedProfileDetails = {
+      user_id: profileDetails?.user_id,
+      user_name: profileDetails?.user_name,
+      user_email: profileDetails?.user_email,
+      user_profile_pic: profileImageWithurl,
+      date_of_birth: profileDetails?.date_of_birth,
+      gender: profileDetails?.gender,
+      created_at: profileDetails?.created_at,
+      totalPlaylist: profileDetails?._count.playlists,
+      totalSongLiked: profileDetails?._count.likedSongs,
+      timeListened: playduration._sum.play_duration
+    }
+
+    return res.status(200).json({ message: "success", profileDetails: fixedProfileDetails })
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export const updateMyProfileDetails = async (req: Request<{}, {}, updateMyProfileDetailsBody>, res: Response) => {
+
+  const { name, gender, dateOfBirth } = req.body;
+  const user = req.user as authUser;
+
+  try {
+
+    if (!name && !gender && !dateOfBirth) {
+      return res.status(400).json({ message: "no data to update" })
+    }
+
+    const updateData: any = {};
+
+    if (name) updateData.user_name = name;
+    if (gender) updateData.gender = gender;
+    if (dateOfBirth) updateData.date_of_birth = new Date(dateOfBirth);
+
+    await prisma.user.update({
+      where: {
+        user_id: user.user_id
+      },
+      data: updateData
+    });
+
+    return res.status(201).json({ message: "details updated successfully" })
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export const updateMyProfilePic = async (req: Request<{}, {}, { profilePic: string }>, res: Response) => {
+
+  const { profilePic } = req.body;
+  const user = req.user as authUser;
+  try {
+
+    if (!profilePic) {
+      return res.status(400).json({ message: "profile pic not found" })
+    }
+
+    await prisma.user.update({
+      where: {
+        user_id: user.user_id
+      },
+      data: {
+        user_profile_pic: profilePic,
+      }
+    })
+
+    return res.status(200).json({ message: "profile picture updated" })
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export const getImageUploadUrl = async (req: Request<{}, {}, getUserProfileImgUploadUrl>, res: Response) => {
+  const {imageType, fileType, fileSize } = req.body;
+  const user = req.user as authUser;
+  try {
+
+    
+    if (!fileType.startsWith('image/')) {
+      return res.status(400).json({ message: "Invalid file type" });
+    }
+
+    if (fileSize > 20 * 1024 * 1024) {
+      return res.status(400).json({ message: "File too large" });
+    }
+    const refId = user.user_id;
+    const result = await createImageUploadUrl(
+      refId,
+      imageType,
+      fileType,
+      refId
+    );
+
+    return res.status(201).json({ message: "url created", result })
+
+
+  } catch (error) {
+    const err = error as Error;
+    console.log("error in getImageUploadUrl controller", err.message);
+    return res.status(500).json({ message: "Internal server error" })
+  }
 }
 
 // user-playlists controllers ==----==>

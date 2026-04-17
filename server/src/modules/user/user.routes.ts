@@ -1,6 +1,6 @@
 import express from "express";
 import { protectRoute, validate } from "../../middleware/auth.middleware.js";
-import { addPlaylistSongs, createPlaylist, getAllPlaylist, getAllRecentSongs, getArtists, getArtistsSongs, getMyPlaylists, getPlaylistSongs, getPublicPlaylists, getRecommendedSongs, getTrendingSongs, likeSong, updateSongEvent } from "./user.controllers.js";
+import { addPlaylistSongs, createPlaylist, getAllPlaylist, getAllRecentSongs, getArtists, getArtistsSongs, getImageUploadUrl, getMyPlaylists, getMyProfileDetails, getPlaylistSongs, getPublicPlaylists, getRecommendedSongs, getTrendingSongs,likeSong, updateMyProfileDetails, updateMyProfilePic, updateSongEvent } from "./user.controllers.js";
 import { createPlaylistValidator, getPlaylistsSongsValidator, validateSongEvent } from "./validations/user.validators.js";
 import { addPlaylistSongsLimiter, createplaylistLimiter, getallplaylistsLimiter, getAllRecentSongsLimiter, getartistsByUserLimiter, getArtistsSongsByUserLimiter, getmyplaylistsLimiter, getplaylistsongsLimiter, getpublicplaylistsLimiter, getRecommendedSongsLimiter, getTrendingSongsLimiter, likedSongLimiter, updateSongEventLimiter } from "../../middleware/ratelimit.js";
 
@@ -28,6 +28,32 @@ router.post("/song-event",
     updateSongEventLimiter,
     protectRoute,
     updateSongEvent
+)
+
+router.get("/profile-details",
+
+    protectRoute,
+    getMyProfileDetails
+)
+
+router.patch("/update-profile-details",
+
+
+    protectRoute,
+    updateMyProfileDetails
+)
+
+router.patch("/update-profile-pic",
+
+
+    protectRoute,
+    updateMyProfilePic
+)
+
+router.post("/getimageurl",
+
+    protectRoute,
+    getImageUploadUrl
 )
 
 // playlists routes ==----==>

@@ -6,6 +6,7 @@ import nodemailer from "nodemailer"
 import { Request, Response } from "express";
 import { authUser, LoginBody, SignupBody } from "../../types/request/auth.js";
 import { StoredOtp } from "../../types/redis/otp.js";
+import { getFileUrl } from "../../services/s3.services.js";
 
 export const signup = async (req: Request<{}, {}, SignupBody>, res: Response) => {
 
@@ -199,13 +200,15 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         }
 
         generateToken(user.user_id, res);
+        
+        const profileImageUrl = await getFileUrl(user.user_profile_pic);
 
         return res.status(200).json({
             message: "logged in successfully", userData: {
                 user_id: user.user_id,
                 user_name: user.user_name,
                 user_email: user.user_email,
-                user_profile_pic: user.user_profile_pic,
+                user_profile_pic: profileImageUrl,
                 date_of_birth: user.date_of_birth,
                 gender: user.gender,
                 role: user.role

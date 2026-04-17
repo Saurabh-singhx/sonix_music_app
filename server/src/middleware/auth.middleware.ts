@@ -4,6 +4,7 @@ import prisma from "../lib/prisma.js";
 import { Request, Response, NextFunction } from "express";
 import { AuthenticatedRequest, AuthPayload, authUser } from "../types/request/auth.js";
 import redisClient from "../config/redis.js";
+import { getFileUrl } from "../services/s3.services.js";
 
 export const validate = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
@@ -73,19 +74,35 @@ export const protectRoute = async (req: Request, res: Response, next: NextFuncti
       const date = user.date_of_birth?.toISOString();
       const key = `userData:${decoded.userId}`;
 
+       let profileImageUrl = "";
 
+      if(user.user_profile_pic){
+        const url = await getFileUrl(user.user_profile_pic);
+        if(url){
+          profileImageUrl = url
+        }
+      }
       const userValue = JSON.stringify({
         user_id: user.user_id,
         user_email: user.user_email,
         user_name: user.user_name,
-        user_profile_pic: user.user_profile_pic,
+        user_profile_pic: profileImageUrl,
         gender: user.gender,
         date_of_birth: date,
         role: user.role,
       })
       await redisClient.set(key, userValue, { EX: 30 });
 
-      (req as AuthenticatedRequest).user = user;
+      const userWithProfileUrl:authUser= {
+        user_id: user.user_id,
+        user_email: user.user_email,
+        user_name: user.user_name,
+        user_profile_pic: profileImageUrl,
+        gender: user.gender,
+        date_of_birth:user.date_of_birth,
+        role: user.role,
+      };
+      (req as AuthenticatedRequest).user = userWithProfileUrl;
 
     } else {
 
@@ -180,19 +197,36 @@ export const protectAdminRoute = async (req: Request, res: Response, next: NextF
       const date = user.date_of_birth?.toISOString();
       const key = `userData:${decoded.userId}`;
 
+      let profileImageUrl = "";
 
+      if(user.user_profile_pic){
+        const url = await getFileUrl(user.user_profile_pic);
+        if(url){
+          profileImageUrl = url
+        }
+      }
       const userValue = JSON.stringify({
         user_id: user.user_id,
         user_email: user.user_email,
         user_name: user.user_name,
-        user_profile_pic: user.user_profile_pic,
+        user_profile_pic: profileImageUrl,
         gender: user.gender,
         date_of_birth: date,
         role: user.role,
       })
       await redisClient.set(key, userValue, { EX: 30 });
 
-      (req as AuthenticatedRequest).user = user;
+      const userWithProfileUrl:authUser= {
+        user_id: user.user_id,
+        user_email: user.user_email,
+        user_name: user.user_name,
+        user_profile_pic: profileImageUrl,
+        gender: user.gender,
+        date_of_birth:user.date_of_birth,
+        role: user.role,
+      };
+
+      (req as AuthenticatedRequest).user = userWithProfileUrl;
 
     } else {
 

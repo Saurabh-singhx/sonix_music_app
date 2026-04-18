@@ -43,7 +43,7 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
                 <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-4 p-4 text-xs text-zinc-500 uppercase tracking-wider border-b border-zinc-800 font-medium">
                     <div className="w-8 text-center">#</div>
                     <div>Title</div>
-                    <div className="hidden md:block">Size</div>
+                    {/* <div className="hidden md:block">Size</div> */}
                     <div className="text-right">Release Date</div>
                 </div>
 
@@ -85,9 +85,9 @@ export const AllSongsSection : React.FC<AllSongsPageProps>= ({playing,progress})
                                     </div>
                                 </div>
 
-                                <div className="hidden md:block text-sm text-zinc-500 truncate">
+                                {/* <div className="hidden md:block text-sm text-zinc-500 truncate">
                                     {formatFileSize(song.size)}
-                                </div>
+                                </div> */}
 
                                 <div className="text-right text-sm text-zinc-500 font-mono">
                                     {formattedDate(song.release_date)}

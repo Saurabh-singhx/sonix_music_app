@@ -287,7 +287,12 @@ export default function UserProfilePage() {
       updateMyProfileDetails(editForm)
     }
     setIsEditing(false);
-    setImageFile(null)
+    setImageFile(null);
+    
+    setChangesInProfile({
+      profileDetails:false,
+      profilePic:false
+    })
   };
 
   // Handle cancel

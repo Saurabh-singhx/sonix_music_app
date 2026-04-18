@@ -298,14 +298,64 @@ export const updateMyProfileDetails = async (req: Request<{}, {}, updateMyProfil
     if (gender) updateData.gender = gender;
     if (dateOfBirth) updateData.date_of_birth = new Date(dateOfBirth);
 
-    await prisma.user.update({
+    const profileDetails = await prisma.user.update({
       where: {
         user_id: user.user_id
       },
-      data: updateData
+      data: updateData,
+       select: {
+        user_id: true,
+        user_name: true,
+        user_email: true,
+        user_profile_pic: true,
+        date_of_birth: true,
+        gender: true,
+        created_at: true,
+        is_premium: true,
+        _count: {
+          select: {
+            playlists: true,
+            likedSongs: true,
+          }
+        }
+      }
     });
 
-    return res.status(201).json({ message: "details updated successfully" })
+    const playduration = await prisma.userSongEvent.aggregate({
+      where: {
+        user_id: user.user_id,
+        event_type: {
+          in: ["COMPLETE", "PLAY", "REPEAT"]
+        },
+
+      },
+      _sum: {
+        play_duration: true,
+      }
+    })
+
+    let profileImageWithurl: string | undefined = "";
+    if (profileDetails?.user_profile_pic) {
+      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+    }
+
+    const fixedProfileDetails = {
+      user_id: profileDetails?.user_id,
+      user_name: profileDetails?.user_name,
+      user_email: profileDetails?.user_email,
+      user_profile_pic: profileImageWithurl,
+      date_of_birth: profileDetails?.date_of_birth,
+      gender: profileDetails?.gender,
+      created_at: profileDetails?.created_at,
+      totalPlaylist: profileDetails?._count.playlists,
+      totalSongLiked: profileDetails?._count.likedSongs,
+      timeListened: playduration._sum.play_duration
+    }
+
+    const key = `userData:${user.user_id}`;
+    await redisClient.del(key)
+
+    return res.status(201).json({ message: "details updated successfully",profileDetails:fixedProfileDetails})
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -322,16 +372,64 @@ export const updateMyProfilePic = async (req: Request<{}, {}, { profilePic: stri
       return res.status(400).json({ message: "profile pic not found" })
     }
 
-    await prisma.user.update({
+    const profileDetails = await prisma.user.update({
       where: {
         user_id: user.user_id
       },
       data: {
         user_profile_pic: profilePic,
+      },
+      select: {
+        user_id: true,
+        user_name: true,
+        user_email: true,
+        user_profile_pic: true,
+        date_of_birth: true,
+        gender: true,
+        created_at: true,
+        is_premium: true,
+        _count: {
+          select: {
+            playlists: true,
+            likedSongs: true,
+          }
+        }
+      }
+    })
+    const playduration = await prisma.userSongEvent.aggregate({
+      where: {
+        user_id: user.user_id,
+        event_type: {
+          in: ["COMPLETE", "PLAY", "REPEAT"]
+        },
+
+      },
+      _sum: {
+        play_duration: true,
       }
     })
 
-    return res.status(200).json({ message: "profile picture updated" })
+    let profileImageWithurl: string | undefined = "";
+    if (profileDetails?.user_profile_pic) {
+      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+    }
+
+    const fixedProfileDetails = {
+      user_id: profileDetails?.user_id,
+      user_name: profileDetails?.user_name,
+      user_email: profileDetails?.user_email,
+      user_profile_pic: profileImageWithurl,
+      date_of_birth: profileDetails?.date_of_birth,
+      gender: profileDetails?.gender,
+      created_at: profileDetails?.created_at,
+      totalPlaylist: profileDetails?._count.playlists,
+      totalSongLiked: profileDetails?._count.likedSongs,
+      timeListened: playduration._sum.play_duration
+    }
+    const key = `userData:${user.user_id}`;
+    await redisClient.del(key)
+
+    return res.status(200).json({ message: "profile picture updated",profileDetails:fixedProfileDetails})
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

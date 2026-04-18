@@ -4,7 +4,7 @@ import { useUserStore } from "@/store/user/user.store";
 import { Disc, Play } from "lucide-react";
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom";
-import { formatFileSize, formattedDate } from "@/helpers/user.helpers";
+import { formattedDate } from "@/helpers/user.helpers";
 
 interface AllSongsPageProps{
     progress:number,

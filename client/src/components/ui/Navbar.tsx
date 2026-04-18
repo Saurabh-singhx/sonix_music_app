@@ -2,11 +2,12 @@ import { Disc3 } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
 import { useAuthStore } from '@/store/auth/auth.store';
 import { useNavigate } from 'react-router-dom';
+import { useUserStore } from '@/store/user/user.store';
 
 function Navbar() {
   const navigate = useNavigate();
   const { logout, authUser } = useAuthStore();
-
+  const {myProfileDetails} = useUserStore()
   const handleNavigation =()=>{
     navigate("/")
   }
@@ -41,7 +42,7 @@ function Navbar() {
         <ProfileMenu 
           onLogoutClick={logout} 
           onProfileClick={handleNavigateToProfile}
-          profileImageUrl={authUser?.user_profile_pic} 
+          profileImageUrl={myProfileDetails?.user_profile_pic || authUser?.user_profile_pic} 
         />
       </div>
     </div>

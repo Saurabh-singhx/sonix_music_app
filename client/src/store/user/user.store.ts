@@ -33,11 +33,12 @@ export const useUserStore = create<userStoreT>((set, get) => ({
     isGettingPlaylistSongs: false,
     isAddingPlaylistSongs: false,
     myProfileDetails: null,
-    isGettingMyProfileDetails:false,
-    isgettingProfileImageUploadUrl:false,
-    profileImageUploadUrl:null,
-    profileImageS3Key:null,
-    isUploadingProfileImage:false,
+    isGettingMyProfileDetails: false,
+    isgettingProfileImageUploadUrl: false,
+    profileImageUploadUrl: null,
+    profileImageS3Key: null,
+    isUploadingProfileImage: false,
+    isUpdatingMyProfileDetails: false,
 
     getRecentSongs: async (limit) => {
 
@@ -386,19 +387,19 @@ export const useUserStore = create<userStoreT>((set, get) => ({
         }
     },
     getMyProfileDetails: async () => {
-        set({isGettingMyProfileDetails:true})
+        set({ isGettingMyProfileDetails: true })
 
         try {
             const res = await axiosInstance.get("/api/v1/user/profile-details");
 
-            set({myProfileDetails:res.data.profileDetails})
+            set({ myProfileDetails: res.data.profileDetails })
         } catch (error) {
-               if (error instanceof AxiosError) {
+            if (error instanceof AxiosError) {
                 const message = error.response?.data?.message ?? "Error while fetching profile details";
                 toast.error(message);
             }
-        }finally{
-            set({isGettingMyProfileDetails:false})
+        } finally {
+            set({ isGettingMyProfileDetails: false })
         }
     },
     getProfileImageUploadUrl: async (data) => {
@@ -433,13 +434,11 @@ export const useUserStore = create<userStoreT>((set, get) => ({
             return;
         }
 
-        if (!profileImageS3Key ) {
+        if (!profileImageS3Key) {
             toast.error("image is missing");
             return;
         }
-
         set({ isUploadingProfileImage: true });
-
         try {
             await axios.put(profileImageUploadUrl, file, {
                 headers: { "Content-Type": file.type },
@@ -449,9 +448,11 @@ export const useUserStore = create<userStoreT>((set, get) => ({
                 },
             });
 
-            await axiosInstance.patch("/api/v1/user/update-profile-pic", {
+            const res = await axiosInstance.patch("/api/v1/user/update-profile-pic", {
                 profilePic: profileImageS3Key,
             });
+
+            set({ myProfileDetails: res.data.profileDetails })
 
             toast.success("Image uploaded successfully");
         } catch (error) {
@@ -467,5 +468,24 @@ export const useUserStore = create<userStoreT>((set, get) => ({
             set({ profileImageS3Key: "" });
         }
     },
+    updateMyProfileDetails: async (details) => {
+        set({ isUpdatingMyProfileDetails: true });
+
+        try {
+            const res = await axiosInstance.patch("/api/v1/user/update-profile-details", details);
+
+            set({ myProfileDetails: res.data?.profileDetails });
+            toast.success(res.data?.message)
+        } catch (error) {
+            let errorMessage: string = "error while updating profile details"
+            if (error instanceof AxiosError) {
+                errorMessage =
+                    error.response?.data?.message ?? error.message;
+            }
+            toast.error(errorMessage)
+        }finally{
+            set({isUpdatingMyProfileDetails:false})
+        }
+    }
 
 }));

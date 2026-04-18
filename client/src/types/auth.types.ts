@@ -42,4 +42,5 @@ export interface AuthStoreT {
     signup: (data:SignupPayload) => Promise<number | undefined>;
     sendOtp: (data:otpPayload) => Promise<number | undefined>;
     constinueAsGuest: () => Promise<number | undefined>;
+    setAuthUser:(data:user)=>void;
 }

@@ -144,6 +144,9 @@ export const useAuthStore = create<AuthStoreT>((set,get) => ({
         }finally{
             set({isCreatingGuest:false})
         }
+    },
+    setAuthUser:(data)=>{
+        set({authUser:data})
     }
 
 }));

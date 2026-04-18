@@ -40,6 +40,11 @@ export interface profileDetails {
     timeListened: number
 }
 
+export interface updateProfileDetailsBody {
+    name: string;
+    gender: string;
+    dateOfBirth:string
+}
 
 export interface userStoreT {
     recentSongs: song[];
@@ -67,12 +72,13 @@ export interface userStoreT {
     currentPlaylistSongs: song[];
     isGettingPlaylistSongs: boolean;
     isAddingPlaylistSongs: boolean;
-    myProfileDetails:profileDetails|null;
-    isGettingMyProfileDetails:boolean;
-    profileImageUploadUrl:string | null | undefined;
-    isgettingProfileImageUploadUrl:boolean;
-    profileImageS3Key:string|null;
-    isUploadingProfileImage:boolean,
+    myProfileDetails: profileDetails | null;
+    isGettingMyProfileDetails: boolean;
+    profileImageUploadUrl: string | null | undefined;
+    isgettingProfileImageUploadUrl: boolean;
+    profileImageS3Key: string | null;
+    isUploadingProfileImage: boolean;
+    isUpdatingMyProfileDetails: boolean;
 
     getRecentSongs: (limit: number | null) => Promise<void>;
     updateSongEvent: (currentTrack: song, duration: number) => Promise<void>;
@@ -92,6 +98,7 @@ export interface userStoreT {
     getAllSongs: () => void;
     addPlaylistSongs: (playlistId: string, song: song) => Promise<void>;
     getMyProfileDetails: () => Promise<void>;
-    getProfileImageUploadUrl: (data:artistGetUrlPayload) => Promise<void>;
-    updateMyProfilePic:(data:File) => Promise<void>;
+    getProfileImageUploadUrl: (data: artistGetUrlPayload) => Promise<void>;
+    updateMyProfilePic: (data: File) => Promise<void>;
+    updateMyProfileDetails: (data:updateProfileDetailsBody) => Promise<void>;
 }

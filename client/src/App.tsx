@@ -22,7 +22,6 @@ import { PlaylistViewPage } from './pages/user/PlaylistViewPage';
 function App() {
 
   const { checkAuth, authUser, isCheckingAuth, isLoggingOut } = useAuthStore();
-
   useEffect(() => {
     if (authUser?.role !== "guest") {
       checkAuth();

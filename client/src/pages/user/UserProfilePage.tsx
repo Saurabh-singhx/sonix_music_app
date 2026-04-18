@@ -21,6 +21,7 @@ import MusicLoader from '@/components/ui/Loader';
 import profileImage from '@/assets/profile.jpeg'
 import type { artistGetUrlPayload } from '@/types/admin.types';
 import { useAuthStore } from '@/store/auth/auth.store';
+import type { updateProfileDetailsBody } from '@/types/user.types';
 
 export interface profileDetails {
   user_id: string,
@@ -181,16 +182,20 @@ const EditableRow = ({
 
 export default function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
-  const { myProfileDetails, getMyProfileDetails, isGettingMyProfileDetails,getProfileImageUploadUrl,updateMyProfilePic} = useUserStore();
-  const {authUser} = useAuthStore()
+  const { myProfileDetails, getMyProfileDetails, isGettingMyProfileDetails, getProfileImageUploadUrl, updateMyProfilePic, updateMyProfileDetails } = useUserStore();
+  const { authUser } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Local state for editing
-  const [editForm, setEditForm] = useState<Partial<profileDetails>>({});
+  const [editForm, setEditForm] = useState<updateProfileDetailsBody>({
+    name: "",
+    gender: "",
+    dateOfBirth: ""
+  });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [changesInProfile, setChangesInProfile] = useState({
-    profilePic:false,
-    profileDetails:false
+    profilePic: false,
+    profileDetails: false
   });
   const [imageFile, setImageFile] = useState<File | null>()
 
@@ -202,10 +207,9 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (isEditing && myProfileDetails) {
       setEditForm({
-        user_name: myProfileDetails.user_name,
-        date_of_birth: myProfileDetails.date_of_birth,
+        name: myProfileDetails.user_name,
+        dateOfBirth: myProfileDetails.date_of_birth,
         gender: myProfileDetails.gender,
-        user_profile_pic: myProfileDetails.user_profile_pic
       });
       setPreviewImage(myProfileDetails.user_profile_pic);
     }
@@ -220,6 +224,13 @@ export default function UserProfilePage() {
       day: 'numeric'
     });
   };
+
+  const formatTimeListen = (data: number | undefined) => {
+
+    if (data) {
+      return Math.floor((data / 60) / 60)
+    }
+  }
 
   // Format date for input type="date"
   const formatDateForInput = (dateString: string) => {
@@ -239,7 +250,7 @@ export default function UserProfilePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
-    setChangesInProfile(prev =>({...prev,profileDetails:true}))
+    setChangesInProfile(prev => ({ ...prev, profileDetails: true }))
   };
 
   // Handle profile picture change
@@ -247,7 +258,7 @@ export default function UserProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file)
-      setChangesInProfile(prev =>({...prev,profilePic:true}))
+      setChangesInProfile(prev => ({ ...prev, profilePic: true }))
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
       setEditForm(prev => ({ ...prev, user_profile_pic: imageUrl }));
@@ -264,16 +275,17 @@ export default function UserProfilePage() {
 
   // Handle save
   const handleSave = () => {
-    
-    if(changesInProfile.profilePic){
-      if(imageFile){
+
+    if (changesInProfile.profilePic) {
+      if (imageFile) {
         updateMyProfilePic(imageFile)
         console.log("profile image uploaded")
       }
-      console.log("profile image uploaded")
     }
 
-    console.log("Saving profile:", editForm);
+    if (changesInProfile.profileDetails) {
+      updateMyProfileDetails(editForm)
+    }
     setIsEditing(false);
     setImageFile(null)
   };
@@ -281,7 +293,11 @@ export default function UserProfilePage() {
   // Handle cancel
   const handleCancel = () => {
     setIsEditing(false);
-    setEditForm({});
+    setEditForm({
+      name: "",
+      gender: "",
+      dateOfBirth: ""
+    });
     setPreviewImage(null);
   };
 
@@ -394,8 +410,8 @@ export default function UserProfilePage() {
                   <div className="w-full mb-6">
                     <input
                       type="text"
-                      name="user_name"
-                      value={editForm.user_name || ''}
+                      name="name"
+                      value={editForm.name || ''}
                       onChange={handleInputChange}
                       className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-2 text-xl font-bold text-white text-center focus:outline-none focus:border-white/30 transition-colors"
                       placeholder="Your Name"
@@ -441,8 +457,8 @@ export default function UserProfilePage() {
                       <EditableRow
                         icon={User}
                         label="Full Name"
-                        name="user_name"
-                        value={editForm.user_name || ''}
+                        name="name"
+                        value={editForm.name || ''}
                         onChange={handleInputChange}
                       />
                       <EditableRow
@@ -463,8 +479,8 @@ export default function UserProfilePage() {
                       <EditableRow
                         icon={Calendar}
                         label="Date of Birth"
-                        name="date_of_birth"
-                        value={formatDateForInput(editForm.date_of_birth || '')}
+                        name="dateOfBirth"
+                        value={formatDateForInput(editForm.dateOfBirth || '')}
                         onChange={handleInputChange}
                         type="date"
                       />
@@ -549,7 +565,7 @@ export default function UserProfilePage() {
                   <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Liked Songs</span>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-2xl font-bold text-white">{myProfileDetails?.timeListened || 0}h</span>
+                  <span className="text-2xl font-bold text-white">{formatTimeListen(myProfileDetails?.timeListened) || 0}h</span>
                   <span className="text-xs text-neutral-400 uppercase tracking-wider mt-1">Hours Listened</span>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-white/5 border border-white/5">

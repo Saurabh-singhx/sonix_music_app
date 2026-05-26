@@ -52,7 +52,7 @@ export const geminiAiResponseRecommendations = async (
           ]`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.1-flash-lite",
         contents: prompt,
         config: {
           temperature: 0,
@@ -134,7 +134,7 @@ export const songDetailsFromAi = async (songName: string, artistName: string): P
     artistName:${artistName}`
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.1-flash-lite",
         contents: prompt,
         config: {
           temperature: 0,

@@ -74,11 +74,13 @@ export const protectRoute = async (req: Request, res: Response, next: NextFuncti
       const date = user.date_of_birth?.toISOString();
       const key = `userData:${decoded.userId}`;
 
-       let profileImageUrl = "";
+      let profileImageUrl = "";
 
-      if(user.user_profile_pic){
+      if (user.user_profile_pic.startsWith("https://")) {
+        profileImageUrl = user.user_profile_pic
+      } else {
         const url = await getFileUrl(user.user_profile_pic);
-        if(url){
+        if (url) {
           profileImageUrl = url
         }
       }
@@ -93,13 +95,13 @@ export const protectRoute = async (req: Request, res: Response, next: NextFuncti
       })
       await redisClient.set(key, userValue, { EX: 30 });
 
-      const userWithProfileUrl:authUser= {
+      const userWithProfileUrl: authUser = {
         user_id: user.user_id,
         user_email: user.user_email,
         user_name: user.user_name,
         user_profile_pic: profileImageUrl,
         gender: user.gender,
-        date_of_birth:user.date_of_birth,
+        date_of_birth: user.date_of_birth,
         role: user.role,
       };
       (req as AuthenticatedRequest).user = userWithProfileUrl;
@@ -199,9 +201,11 @@ export const protectAdminRoute = async (req: Request, res: Response, next: NextF
 
       let profileImageUrl = "";
 
-      if(user.user_profile_pic){
+      if (user.user_profile_pic.startsWith("https://")) {
+        profileImageUrl = user.user_profile_pic
+      } else {
         const url = await getFileUrl(user.user_profile_pic);
-        if(url){
+        if (url) {
           profileImageUrl = url
         }
       }
@@ -216,13 +220,13 @@ export const protectAdminRoute = async (req: Request, res: Response, next: NextF
       })
       await redisClient.set(key, userValue, { EX: 30 });
 
-      const userWithProfileUrl:authUser= {
+      const userWithProfileUrl: authUser = {
         user_id: user.user_id,
         user_email: user.user_email,
         user_name: user.user_name,
         user_profile_pic: profileImageUrl,
         gender: user.gender,
-        date_of_birth:user.date_of_birth,
+        date_of_birth: user.date_of_birth,
         role: user.role,
       };
 

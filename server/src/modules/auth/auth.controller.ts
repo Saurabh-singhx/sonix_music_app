@@ -201,7 +201,7 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
         generateToken(user.user_id, res);
         
-        const profileImageUrl = await getFileUrl(user.user_profile_pic);
+        const profileImageUrl = user.user_profile_pic.startsWith("https://")?user.user_profile_pic:await getFileUrl(user.user_profile_pic);
 
         return res.status(200).json({
             message: "logged in successfully", userData: {

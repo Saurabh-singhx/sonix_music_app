@@ -5,9 +5,14 @@ import { useUserStore } from "@/store/user/user.store";
 import { cn } from "@/lib/utils";
 import { useRef } from "react";
 
-export const TrendingSection = ({ fullPage = false }: { fullPage?: boolean }) => {
-  const { setCurrent } = usePlayerStore();
+interface trendingSectionProps{
+    progress:number,
+}
+
+export const TrendingSection : React.FC<trendingSectionProps>= ({progress}) =>{
   const { trendingSongs } = useUserStore();
+  const { recentSongs } = useUserStore();
+    const { currentTrack,setQueue } = usePlayerStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -20,8 +25,17 @@ export const TrendingSection = ({ fullPage = false }: { fullPage?: boolean }) =>
     }
   };
 
+  const handleSongPLay = (index:number)=>{
+
+        if(currentTrack){
+            setQueue(recentSongs,index,progress);
+        }else{
+            setQueue(recentSongs,index);
+        }
+    }
+
   return (
-    <section className={cn("mb-12", fullPage && "pt-8")}>
+    <section className={cn("mb-12")}>
       <div className="flex items-center justify-between mb-4 sm:mb-6 px-4 sm:px-0">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -62,7 +76,7 @@ export const TrendingSection = ({ fullPage = false }: { fullPage?: boolean }) =>
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ scale: 1.02 }}
                 className="group relative shrink-0 w-40 sm:w-50 md:w-60 lg:w-70 aspect-3/4 rounded-xl overflow-hidden cursor-pointer bg-zinc-900 border border-zinc-800 snap-start"
-                onClick={() => setCurrent(song)}
+                onClick={() => handleSongPLay(index)}
               >
                 <img
                   src={song.cover_image_url}

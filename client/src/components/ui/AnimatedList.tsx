@@ -4,6 +4,7 @@ import { motion, useInView } from 'motion/react';
 import './AnimatedList.css';
 import type { song } from "@/types/user.types";
 import { formattedDate } from "@/helpers/user.helpers";
+import { usePlayerStore } from "@/store/player/player.store";
 interface AnimatedItemProps {
   children: ReactNode;
   delay?: number;
@@ -74,6 +75,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
+  const {currentSongindex} = usePlayerStore();
   const handleItemClick = useCallback(
     (item: song, index: number) => {
       setSelectedIndex(index);
@@ -154,7 +156,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     <div className={`scroll-list-container ${className}`}>
       <div ref={listRef}className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} h-[100%]`} onScroll={handleScroll}>
         {items?.map((track, index) => {
-          const isActive =  selectedIndex === index;
+          
           return (
             <AnimatedItem
               key={index}
@@ -172,14 +174,14 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
                 layout
                 className={`
                               w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden
-                              ${isActive
+                              ${currentSongindex === index
                     ? 'bg-primary/10 border border-primary/20'
                     : 'hover:bg-accent/50 border border-transparent'
                   }
                             `}
               >
                 {/* Active Indicator Bar */}
-                {isActive && (
+                {currentSongindex === index && (
                   <motion.div
                     layoutId="activeIndicator"
                     className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
@@ -189,12 +191,12 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
                 {/* Track Number / Visualizer */}
                 <div className={`
                               w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-medium text-sm
-                              ${isActive
+                              ${currentSongindex === index
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground group-hover:bg-background'
                   }
                             `}>
-                  {isActive && playing ? (
+                  {currentSongindex === index && playing ? (
                     <div className="flex gap-0.5 items-end h-4">
                       {[1, 2, 3].map(i => (
                         <motion.div
@@ -217,7 +219,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
 
                 {/* Track Details */}
                 <div className="min-w-0 flex-1">
-                  <p className={`font-semibold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                  <p className={`font-semibold truncate ${currentSongindex === index ? 'text-primary' : 'text-foreground'}`}>
                     {track.song_title}
                   </p>
                   <p className="text-sm text-muted-foreground truncate">

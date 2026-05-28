@@ -10,4 +10,5 @@ export interface PlayerState {
   next: (currentTrack:song,duration:number) => void;
   prev: (currentTrack:song,duration:number) => void;
   clear: () => void;
+  clearQueue:()=>void;
 }

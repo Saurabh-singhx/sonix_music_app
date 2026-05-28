@@ -23,18 +23,11 @@ import type { song } from "@/types/user.types";
 import { usePlayerStore } from "@/store/player/player.store";
 import { useAuthStore } from "@/store/auth/auth.store";
 
-
-// Utility functions
-// const formatDuration = (seconds: number) => {
-//   const mins = Math.floor(seconds / 60);
-//   const secs = seconds % 60;
-//   return `${mins}:${secs.toString().padStart(2, "0")}`;
-// };
-
 interface LayoutContext {
   playing: boolean;
   currentTime: string;
   duration: number;
+  progress:number;
 };
 
 export const PlaylistViewPage = () => {
@@ -45,8 +38,8 @@ export const PlaylistViewPage = () => {
   const [songAdd, setSongAdd] = useState(false)
   const { currentPlaylistView, currentPlaylistSongs, isGettingPlaylistSongs, AllSongs, addPlaylistSongs } = useUserStore();
   const { authUser } = useAuthStore();
-  const { setCurrent } = usePlayerStore();
-  const { playing, currentTime, duration } = useOutletContext<LayoutContext>();
+  const { setCurrent,setQueue } = usePlayerStore();
+  const { playing, currentTime, duration,progress} = useOutletContext<LayoutContext>();
 
   const [editForm, setEditForm] = useState({
     name: currentPlaylistView?.playlist_name,
@@ -55,7 +48,7 @@ export const PlaylistViewPage = () => {
   });
 
   const handlePlayAll = () => {
-
+    setQueue(currentPlaylistSongs,0,progress)
   };
 
 

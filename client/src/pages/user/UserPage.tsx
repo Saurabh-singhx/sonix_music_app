@@ -49,7 +49,7 @@ export default function UserPage() {
               }
 
               {
-                isGettingTrendingSongs? (<TrendingSkeletonShimmer itemCount={4}/>):(<TrendingSection />)
+                isGettingTrendingSongs? (<TrendingSkeletonShimmer itemCount={4}/>):(<TrendingSection progress={progress}/>)
               }
 
               {

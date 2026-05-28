@@ -30,6 +30,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   },
 
+  clearQueue:()=>{
+    set({queue:[]})
+  },
+
 
   setCurrent: (song, duration) => {
     const { queue } = get();

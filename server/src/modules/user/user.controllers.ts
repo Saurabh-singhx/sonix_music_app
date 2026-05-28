@@ -746,7 +746,7 @@ export const getArtists = async (req: Request, res: Response) => {
   try {
 
     const artist = await prisma.artist.findMany({
-      take: 5,
+      take: 10,
       orderBy: {
         createdAt: "asc"
       },

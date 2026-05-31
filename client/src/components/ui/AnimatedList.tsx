@@ -49,9 +49,9 @@ interface AnimatedListProps {
   playing: boolean;
   currentTime: string;
   duration: number;
-  playlistSelect?:boolean;
+  playlistSelect?: boolean;
 
-  onPlaylistSongAdd?:(item:song)=>void;
+  onPlaylistSongAdd?: (item: song) => void;
 }
 
 const AnimatedList: React.FC<AnimatedListProps> = ({
@@ -75,7 +75,7 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
-  const {currentSongindex} = usePlayerStore();
+  const { currentSongindex } = usePlayerStore();
   const handleItemClick = useCallback(
     (item: song, index: number) => {
       setSelectedIndex(index);
@@ -125,6 +125,15 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
   }, [items, selectedIndex, onItemSelect, enableArrowNavigation]);
 
   useEffect(() => {
+    if (items) {
+      if ((currentSongindex >= items?.length - 3) && hasMore && !loading) {
+        loadMore?.()
+      }
+    }
+  }, [items, selectedIndex, hasMore, loadMore])
+
+
+  useEffect(() => {
     if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
     const container = listRef.current;
     const selectedItem = container.querySelector(`[data-index="${selectedIndex}"]`) as HTMLElement | null;
@@ -146,17 +155,17 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
     setKeyboardNav(false);
   }, [selectedIndex, keyboardNav]);
 
-  const handlePlaylistSongAdd = (item:song) =>{
-    if(onPlaylistSongAdd){
+  const handlePlaylistSongAdd = (item: song) => {
+    if (onPlaylistSongAdd) {
       onPlaylistSongAdd(item)
     }
   }
 
   return (
     <div className={`scroll-list-container ${className}`}>
-      <div ref={listRef}className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} h-[100%]`} onScroll={handleScroll}>
+      <div ref={listRef} className={`scroll-list ${!displayScrollbar ? 'no-scrollbar' : ''} h-[100%]`} onScroll={handleScroll}>
         {items?.map((track, index) => {
-          
+
           return (
             <AnimatedItem
               key={index}
@@ -229,22 +238,22 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
 
                 {/* Duration / Options */}
                 {
-                  !playlistSelect &&(<div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {formattedDate(track.release_date)}
-                  </span>
-                  {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                  !playlistSelect && (<div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {formattedDate(track.release_date)}
+                    </span>
+                    {/* <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal className="w-4 h-4" />
                   </Button> */}
-                </div>)
+                  </div>)
                 }
 
                 {
-                  playlistSelect &&(
+                  playlistSelect && (
                     <div>
                       <button
-                      onClick={()=>handlePlaylistSongAdd(track)}
-                      className="py-2 px-4 bg-primary-foreground text-white rounded-3xl hover:bg-white hover:text-black"
+                        onClick={() => handlePlaylistSongAdd(track)}
+                        className="py-2 px-4 bg-primary-foreground text-white rounded-3xl hover:bg-white hover:text-black"
                       >
                         Add
                       </button>

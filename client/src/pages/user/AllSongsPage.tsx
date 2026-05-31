@@ -2,6 +2,7 @@ import AnimatedList from "@/components/ui/AnimatedList"
 import { usePlayerStore } from "@/store/player/player.store";
 import { useUserStore } from "@/store/user/user.store"
 import type { song } from "@/types/user.types";
+import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
 interface LayoutContext{
@@ -16,14 +17,18 @@ const AllSongsPage = () => {
     const { setCurrent,setQueue} = usePlayerStore()
     const { playing,currentTime,duration} = useOutletContext<LayoutContext>();
     const handleplayer = (item: song) => {
-        setQueue(recentSongs)
         setCurrent(item)
         // console.log(currentSongindex,duration);
     }
 
-    const handleLoadmore = ()=>{
-        getRecentSongs(10)
+    const handleLoadmore = async()=>{
+        await getRecentSongs(10)
     }
+
+    useEffect(() => {
+      setQueue(recentSongs)
+    }, [recentSongs])
+    
     return (
         <div className="pt-20 h-screen overflow-y-hidden">
 

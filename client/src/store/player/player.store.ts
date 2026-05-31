@@ -48,7 +48,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             useUserStore.getState().updateSongEvent(currentTrack, duration);
           }
           set({ currentSongindex: s });
-          break;
         }
       }
     }

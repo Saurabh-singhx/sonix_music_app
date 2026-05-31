@@ -13,11 +13,12 @@ interface LayoutContext{
 const AllSongsPage = () => {
 
     const { recentSongs,isGettingSongs,nextCursor,getRecentSongs} = useUserStore();
-    const { setCurrent} = usePlayerStore()
+    const { setCurrent,setQueue} = usePlayerStore()
     const { playing,currentTime,duration} = useOutletContext<LayoutContext>();
     const handleplayer = (item: song) => {
+        setQueue(recentSongs)
         setCurrent(item)
-        // console.log(playing);
+        // console.log(currentSongindex,duration);
     }
 
     const handleLoadmore = ()=>{

@@ -11,7 +11,6 @@ interface trendingSectionProps{
 
 export const TrendingSection : React.FC<trendingSectionProps>= ({progress}) =>{
   const { trendingSongs } = useUserStore();
-  const { recentSongs } = useUserStore();
     const { currentTrack,setQueue } = usePlayerStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -28,9 +27,9 @@ export const TrendingSection : React.FC<trendingSectionProps>= ({progress}) =>{
   const handleSongPLay = (index:number)=>{
 
         if(currentTrack){
-            setQueue(recentSongs,index,progress);
+            setQueue(trendingSongs,index,progress);
         }else{
-            setQueue(recentSongs,index);
+            setQueue(trendingSongs,index);
         }
     }
 

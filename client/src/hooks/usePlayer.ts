@@ -12,6 +12,7 @@ export function useGlobalPlayer() {
   const [position, setPosition] = useState(0)
   const prevUrlRef = useRef<string | null>(null);
   const [isSeeking, setIsSeeking] = useState(false);
+  const durationRef = useRef(player.duration);
   // Load song
   useEffect(() => {
     if (!currentTrack?.song_url) return;
@@ -22,16 +23,12 @@ export function useGlobalPlayer() {
     player.load(currentTrack.song_url, {
       html5: true,
       onend: () => {
-        if (!player.duration) return;
-
-        const percent = Math.floor(
-          (player.getPosition() / player.duration) * 100
-        );
-
+        const dur = durationRef.current;
+        if (!dur) return;
+        const percent = Math.floor((player.getPosition() / dur) * 100);
         if (Number.isNaN(percent)) return;
         next(currentTrack, percent);
       },
-
     });
     player.play()
   }, [currentTrack?.song_url, next]);
@@ -59,6 +56,9 @@ export function useGlobalPlayer() {
     setCurrentTime(`${mins}:${secs.toString().padStart(2, '0')}`);
 
   }, [position, player.duration, currentTrack]);
+  useEffect(() => {
+    durationRef.current = player.duration;
+  }, [player.duration]);
 
   return {
     /* state */

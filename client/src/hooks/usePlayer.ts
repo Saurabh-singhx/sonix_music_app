@@ -56,9 +56,38 @@ export function useGlobalPlayer() {
     setCurrentTime(`${mins}:${secs.toString().padStart(2, '0')}`);
 
   }, [position, player.duration, currentTrack]);
+
   useEffect(() => {
     durationRef.current = player.duration;
   }, [player.duration]);
+
+
+  //for navigation controls
+  useEffect(() => {
+    if (!currentTrack || !('mediaSession' in navigator)) return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.song_title,
+      artist: currentTrack.artist.artist_name ?? '',
+      album: 'Sonix',
+      artwork: currentTrack.cover_image_url
+        ? [{ src: currentTrack.cover_image_url, sizes: '512x512', type: 'image/jpeg' }]
+        : [],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => player.play());
+    navigator.mediaSession.setActionHandler('pause', () => player.pause());
+    navigator.mediaSession.setActionHandler('nexttrack', () => next(currentTrack, 0));
+    navigator.mediaSession.setActionHandler('previoustrack', () => prev(currentTrack, Math.floor(progress)));
+
+  }, [currentTrack]);
+
+  // Sync playbackState when isPlaying changes
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = player.isPlaying ? 'playing' : 'paused';
+  }, [player.isPlaying]);
+
 
   return {
     /* state */

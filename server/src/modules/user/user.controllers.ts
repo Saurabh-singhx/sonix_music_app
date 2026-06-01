@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../lib/prisma.js";
 import { authUser } from "../../types/request/auth.js";
-import {createImageUploadUrl, getFileUrl } from "../../services/s3.services.js";
+import { createImageUploadUrl, getFileUrl } from "../../services/s3.services.js";
 import { addPlaylistSongsBody, plalistDetails, updateMyProfileDetailsBody, userSongEventPayload } from "../../types/request/user.types.js";
 import redisClient from "../../config/redis.js";
 import { verifyAddRecommendationQueue } from "../../services/recommendation.services.js";
@@ -257,7 +257,11 @@ export const getMyProfileDetails = async (req: Request, res: Response) => {
 
     let profileImageWithurl: string | undefined = "";
     if (profileDetails?.user_profile_pic) {
-      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      if (profileDetails.user_profile_pic.startsWith("https://")) {
+        profileImageWithurl = profileDetails?.user_profile_pic
+      } else {
+        profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      }
     }
 
     const fixedProfileDetails = {
@@ -303,7 +307,7 @@ export const updateMyProfileDetails = async (req: Request<{}, {}, updateMyProfil
         user_id: user.user_id
       },
       data: updateData,
-       select: {
+      select: {
         user_id: true,
         user_name: true,
         user_email: true,
@@ -336,7 +340,11 @@ export const updateMyProfileDetails = async (req: Request<{}, {}, updateMyProfil
 
     let profileImageWithurl: string | undefined = "";
     if (profileDetails?.user_profile_pic) {
-      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      if (profileDetails.user_profile_pic.startsWith("https://")) {
+        profileImageWithurl = profileDetails?.user_profile_pic
+      } else {
+        profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      }
     }
 
     const fixedProfileDetails = {
@@ -355,7 +363,7 @@ export const updateMyProfileDetails = async (req: Request<{}, {}, updateMyProfil
     const key = `userData:${user.user_id}`;
     await redisClient.del(key)
 
-    return res.status(201).json({ message: "details updated successfully",profileDetails:fixedProfileDetails})
+    return res.status(201).json({ message: "details updated successfully", profileDetails: fixedProfileDetails })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -411,7 +419,11 @@ export const updateMyProfilePic = async (req: Request<{}, {}, { profilePic: stri
 
     let profileImageWithurl: string | undefined = "";
     if (profileDetails?.user_profile_pic) {
-      profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      if (profileDetails.user_profile_pic.startsWith("https://")) {
+        profileImageWithurl = profileDetails?.user_profile_pic
+      } else {
+        profileImageWithurl = await getFileUrl(profileDetails?.user_profile_pic)
+      }
     }
 
     const fixedProfileDetails = {
@@ -429,7 +441,7 @@ export const updateMyProfilePic = async (req: Request<{}, {}, { profilePic: stri
     const key = `userData:${user.user_id}`;
     await redisClient.del(key)
 
-    return res.status(200).json({ message: "profile picture updated",profileDetails:fixedProfileDetails})
+    return res.status(200).json({ message: "profile picture updated", profileDetails: fixedProfileDetails })
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -437,11 +449,11 @@ export const updateMyProfilePic = async (req: Request<{}, {}, { profilePic: stri
 }
 
 export const getImageUploadUrl = async (req: Request<{}, {}, getUserProfileImgUploadUrl>, res: Response) => {
-  const {imageType, fileType, fileSize } = req.body;
+  const { imageType, fileType, fileSize } = req.body;
   const user = req.user as authUser;
   try {
 
-    
+
     if (!fileType.startsWith('image/')) {
       return res.status(400).json({ message: "Invalid file type" });
     }

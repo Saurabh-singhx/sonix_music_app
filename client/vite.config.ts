@@ -19,6 +19,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
+        id:'/',
         name: 'Sonix',
         short_name: 'Sonix',
         description: 'AI-powered music streaming',

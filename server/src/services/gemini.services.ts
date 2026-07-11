@@ -1,4 +1,5 @@
 import ai from "../config/gemini.js";
+import prisma from '../lib/prisma.js';
 
 export type AiRecommendation = {
   song_title: string;
@@ -15,6 +16,10 @@ export type songDetailsData = {
   releaseDate: string;
   duration: string;
   language: string;
+}
+
+interface EmbedResponse {
+  embedding: { values: number[] };
 }
 
 export const geminiAiResponseRecommendations = async (
@@ -178,4 +183,60 @@ export const songDetailsFromAi = async (songName: string, artistName: string): P
   }
   return null;
 
+}
+
+
+async function generateEmbedding(text: string): Promise<number[]> {
+
+  const response = await ai.models.embedContent({
+    model: "gemini-embedding-2",
+    contents: text,
+    config: {
+      outputDimensionality: 768
+    }
+  });
+  if (!response.embeddings?.[0]?.values) {
+    throw new Error("Unexpected embedding response shape from Gemini");
+  }
+
+  return response.embeddings[0].values;
+}
+
+export async function backfillAll() {
+  const songs = await prisma.song.findMany({
+    where: { embedding: null },
+    select: {
+      song_id: true,
+      song_title: true,
+      genre: true,
+      release_date: true,
+      aiProfile: true,
+      artist: true,
+    }
+  });
+
+  console.log(`Found ${songs.length} songs to embed`);
+
+  for (const [i, song] of songs.entries()) {
+    try {
+      const year = song.release_date?.getFullYear();
+      const text = `${song.song_title} ${song.artist?.artist_name} ${song.genre} ${year} ${song.aiProfile?.mood} ${song.aiProfile?.energy_level} ${song.aiProfile?.language} some tags: ${song.aiProfile?.vibe_tags}`;
+      const vector = await generateEmbedding(text);
+
+      await prisma.$executeRaw`
+      INSERT INTO "SongEmbedding" (song_id, model, embedding, "updatedAt")
+      VALUES (${song.song_id}::uuid, 'gemini-embedding-2', ${JSON.stringify(vector)}::vector, NOW())
+      ON CONFLICT (song_id) DO UPDATE SET embedding = EXCLUDED.embedding, "updatedAt" = NOW()
+      `;
+
+      console.log(`[${i + 1}/${songs.length}] Embedded: ${song.song_title}`);
+    } catch (err) {
+      console.error(`Failed on song ${song.song_id} (${song.song_title}):`, err);
+    }
+
+    // small delay to stay safely under rate limits
+    await new Promise((r) => setTimeout(r, 200));
+  }
+
+  console.log("Done.");
 }

@@ -17,7 +17,6 @@ import "./workers/recommendation.worker.js"
 
 import "./config/passport.js"
 import { Server } from "http";
-
 const app: Application = express();
 
 const PORT: number = Number(process.env.PORT) || 4000;
@@ -52,6 +51,8 @@ const startServer = async (): Promise<void> => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
 
+    // await enablePgvector()
+    // await backfillAll();
     const shutdown = async (): Promise<void> => {
       console.log("🛑 Shutting down server...");
 

@@ -76,6 +76,7 @@ model Song {
   recommendations Recommendation[]
   trending        TrendingSongs[]
   suggestion      Song_suggestion[]
+  embedding       SongEmbedding?
 }
 
 model Playlist {
@@ -213,4 +214,12 @@ model Admin {
   created_at DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model SongEmbedding {
+  song_id    String   @id @db.Uuid
+  song Song @relation(fields: [song_id], references: [song_id], onDelete: Cascade)
+  model     String   @default("text-embedding-004") // track which model generated it
+  embedding Unsupported("vector(768)")?
+  updatedAt DateTime @updatedAt
 }
